@@ -188,12 +188,12 @@ export function KnowledgePage() {
             data-testid="input-search-entries"
           />
         </div>
-        <Select value={category} onValueChange={setCategory}>
+        <Select value={category || "all"} onValueChange={(v) => setCategory(v === "all" ? "" : v)}>
           <SelectTrigger className="w-48" data-testid="select-filter-category">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All categories</SelectItem>
+            <SelectItem value="all">All categories</SelectItem>
             {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>

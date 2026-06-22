@@ -272,12 +272,12 @@ export function RulesPage() {
             data-testid="input-search-rules"
           />
         </div>
-        <Select value={filterType} onValueChange={setFilterType}>
+        <Select value={filterType || "all"} onValueChange={(v) => setFilterType(v === "all" ? "" : v)}>
           <SelectTrigger className="w-52" data-testid="select-filter-rule-type">
             <SelectValue placeholder="All rule types" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All types</SelectItem>
+            <SelectItem value="all">All types</SelectItem>
             {RULE_TYPES.map((t) => <SelectItem key={t} value={t}>{t.replace(/_/g, " ")}</SelectItem>)}
           </SelectContent>
         </Select>
