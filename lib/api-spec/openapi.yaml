@@ -8,19 +8,20 @@ servers:
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: rules
-    description: Numerology rule management
   - name: formulas
-    description: Formula management
   - name: knowledge
-    description: Knowledge base management
   - name: loshu
-    description: Lo Shu grid rule management
   - name: reports
-    description: Report generation
   - name: dashboard
-    description: Dashboard statistics
+  - name: number-meanings
+  - name: professions
+  - name: health-mappings
+  - name: relationships
+  - name: compatibility
+  - name: remedies
+  - name: tags
+  - name: categories
 
 paths:
   /healthz:
@@ -36,7 +37,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  # ─── Dashboard ─────────────────────────────────────────────────────────────
+  # ─── Dashboard ───────────────────────────────────────────────────────────────
   /dashboard/stats:
     get:
       operationId: getDashboardStats
@@ -50,7 +51,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DashboardStats"
 
-  # ─── Rules ──────────────────────────────────────────────────────────────────
+  # ─── Rules ───────────────────────────────────────────────────────────────────
   /rules:
     get:
       operationId: listRules
@@ -318,7 +319,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Formula"
 
-  # ─── Knowledge Base ──────────────────────────────────────────────────────────
+  # ─── Knowledge Base ───────────────────────────────────────────────────────────
   /knowledge-entries:
     get:
       operationId: listKnowledgeEntries
@@ -415,7 +416,7 @@ paths:
         "204":
           description: Deleted
 
-  # ─── Lo Shu ──────────────────────────────────────────────────────────────────
+  # ─── Lo Shu ───────────────────────────────────────────────────────────────────
   /loshu/missing:
     get:
       operationId: listMissingNumberRules
@@ -626,6 +627,610 @@ paths:
         "204":
           description: Deleted
 
+  # ─── Number Meanings ──────────────────────────────────────────────────────────
+  /number-meanings:
+    get:
+      operationId: listNumberMeanings
+      tags: [number-meanings]
+      summary: List number meanings
+      parameters:
+        - name: number_type
+          in: query
+          schema:
+            type: string
+        - name: number
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Number meanings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NumberMeaning"
+    post:
+      operationId: createNumberMeaning
+      tags: [number-meanings]
+      summary: Create a number meaning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NumberMeaningInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NumberMeaning"
+
+  /number-meanings/{id}:
+    get:
+      operationId: getNumberMeaning
+      tags: [number-meanings]
+      summary: Get a number meaning
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Number meaning
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NumberMeaning"
+    patch:
+      operationId: updateNumberMeaning
+      tags: [number-meanings]
+      summary: Update a number meaning
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NumberMeaningUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NumberMeaning"
+    delete:
+      operationId: deleteNumberMeaning
+      tags: [number-meanings]
+      summary: Delete a number meaning
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Profession Mappings ──────────────────────────────────────────────────────
+  /profession-mappings:
+    get:
+      operationId: listProfessionMappings
+      tags: [professions]
+      summary: List profession mappings
+      parameters:
+        - name: number
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Profession mappings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProfessionMapping"
+    post:
+      operationId: createProfessionMapping
+      tags: [professions]
+      summary: Create a profession mapping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfessionMappingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfessionMapping"
+
+  /profession-mappings/{id}:
+    patch:
+      operationId: updateProfessionMapping
+      tags: [professions]
+      summary: Update a profession mapping
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfessionMappingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfessionMapping"
+    delete:
+      operationId: deleteProfessionMapping
+      tags: [professions]
+      summary: Delete a profession mapping
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Health Mappings ──────────────────────────────────────────────────────────
+  /health-mappings:
+    get:
+      operationId: listHealthMappings
+      tags: [health-mappings]
+      summary: List health mappings
+      parameters:
+        - name: number
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Health mappings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HealthMapping"
+    post:
+      operationId: createHealthMapping
+      tags: [health-mappings]
+      summary: Create a health mapping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HealthMappingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthMapping"
+
+  /health-mappings/{id}:
+    patch:
+      operationId: updateHealthMapping
+      tags: [health-mappings]
+      summary: Update a health mapping
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HealthMappingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthMapping"
+    delete:
+      operationId: deleteHealthMapping
+      tags: [health-mappings]
+      summary: Delete a health mapping
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Relationship Mappings ────────────────────────────────────────────────────
+  /relationship-mappings:
+    get:
+      operationId: listRelationshipMappings
+      tags: [relationships]
+      summary: List relationship mappings
+      parameters:
+        - name: number
+          in: query
+          schema:
+            type: integer
+        - name: relationship_type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Relationship mappings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RelationshipMapping"
+    post:
+      operationId: createRelationshipMapping
+      tags: [relationships]
+      summary: Create a relationship mapping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RelationshipMappingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationshipMapping"
+
+  /relationship-mappings/{id}:
+    patch:
+      operationId: updateRelationshipMapping
+      tags: [relationships]
+      summary: Update a relationship mapping
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RelationshipMappingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationshipMapping"
+    delete:
+      operationId: deleteRelationshipMapping
+      tags: [relationships]
+      summary: Delete a relationship mapping
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Compatibility Rules ──────────────────────────────────────────────────────
+  /compatibility-rules:
+    get:
+      operationId: listCompatibilityRules
+      tags: [compatibility]
+      summary: List compatibility rules
+      parameters:
+        - name: number_a
+          in: query
+          schema:
+            type: integer
+        - name: number_b
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Compatibility rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CompatibilityRule"
+    post:
+      operationId: createCompatibilityRule
+      tags: [compatibility]
+      summary: Create a compatibility rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompatibilityRuleInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompatibilityRule"
+
+  /compatibility-rules/{id}:
+    patch:
+      operationId: updateCompatibilityRule
+      tags: [compatibility]
+      summary: Update a compatibility rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompatibilityRuleUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompatibilityRule"
+    delete:
+      operationId: deleteCompatibilityRule
+      tags: [compatibility]
+      summary: Delete a compatibility rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Remedies ─────────────────────────────────────────────────────────────────
+  /remedies:
+    get:
+      operationId: listRemedies
+      tags: [remedies]
+      summary: List remedies
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Remedies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Remedy"
+    post:
+      operationId: createRemedy
+      tags: [remedies]
+      summary: Create a remedy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemedyInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Remedy"
+
+  /remedies/{id}:
+    patch:
+      operationId: updateRemedy
+      tags: [remedies]
+      summary: Update a remedy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemedyUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Remedy"
+    delete:
+      operationId: deleteRemedy
+      tags: [remedies]
+      summary: Delete a remedy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Rule Tags ────────────────────────────────────────────────────────────────
+  /rule-tags:
+    get:
+      operationId: listRuleTags
+      tags: [tags]
+      summary: List rule tags
+      responses:
+        "200":
+          description: Tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RuleTag"
+    post:
+      operationId: createRuleTag
+      tags: [tags]
+      summary: Create a rule tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleTagInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleTag"
+
+  /rule-tags/{id}:
+    delete:
+      operationId: deleteRuleTag
+      tags: [tags]
+      summary: Delete a rule tag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Rule Categories ──────────────────────────────────────────────────────────
+  /rule-categories:
+    get:
+      operationId: listRuleCategories
+      tags: [categories]
+      summary: List rule categories
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RuleCategory"
+    post:
+      operationId: createRuleCategory
+      tags: [categories]
+      summary: Create a rule category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleCategoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleCategory"
+
+  /rule-categories/{id}:
+    patch:
+      operationId: updateRuleCategory
+      tags: [categories]
+      summary: Update a rule category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleCategoryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleCategory"
+    delete:
+      operationId: deleteRuleCategory
+      tags: [categories]
+      summary: Delete a rule category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   # ─── Reports ──────────────────────────────────────────────────────────────────
   /reports/generate:
     post:
@@ -653,24 +1258,18 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
     DashboardStats:
       type: object
       properties:
-        totalRules:
-          type: integer
-        activeRules:
-          type: integer
-        totalFormulas:
-          type: integer
-        activeFormulas:
-          type: integer
-        totalKnowledgeEntries:
-          type: integer
-        totalLoShuRules:
-          type: integer
+        totalRules: { type: integer }
+        activeRules: { type: integer }
+        totalFormulas: { type: integer }
+        activeFormulas: { type: integer }
+        totalKnowledgeEntries: { type: integer }
+        totalLoShuRules: { type: integer }
+        totalNumberMeanings: { type: integer }
         rulesByType:
           type: array
           items:
@@ -679,476 +1278,504 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Rule"
-      required:
-        - totalRules
-        - activeRules
-        - totalFormulas
-        - activeFormulas
-        - totalKnowledgeEntries
-        - totalLoShuRules
-        - rulesByType
-        - recentRules
+      required: [totalRules, activeRules, totalFormulas, activeFormulas, totalKnowledgeEntries, totalLoShuRules, totalNumberMeanings, rulesByType, recentRules]
 
     RuleTypeCount:
       type: object
       properties:
-        type:
-          type: string
-        count:
-          type: integer
-      required:
-        - type
-        - count
+        type: { type: string }
+        count: { type: integer }
+      required: [type, count]
 
     Rule:
       type: object
       properties:
-        id:
-          type: integer
-        name:
-          type: string
-        rule_type:
-          type: string
-        description:
-          type: ["string", "null"]
-        condition_json:
-          type: object
-          additionalProperties: true
-        result_json:
-          type: object
-          additionalProperties: true
-        priority:
-          type: integer
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-        updated_at:
-          type: string
-      required:
-        - id
-        - name
-        - rule_type
-        - condition_json
-        - result_json
-        - priority
-        - is_active
-        - created_at
-        - updated_at
+        id: { type: integer }
+        name: { type: string }
+        rule_type: { type: string }
+        description: { type: ["string", "null"] }
+        condition_json: { type: object, additionalProperties: true }
+        result_json: { type: object, additionalProperties: true }
+        priority: { type: integer }
+        is_active: { type: boolean }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, name, rule_type, condition_json, result_json, priority, is_active, created_at, updated_at]
 
     RuleInput:
       type: object
       properties:
-        name:
-          type: string
-        rule_type:
-          type: string
-        description:
-          type: string
-        condition_json:
-          type: object
-          additionalProperties: true
-        result_json:
-          type: object
-          additionalProperties: true
-        priority:
-          type: integer
-        is_active:
-          type: boolean
-      required:
-        - name
-        - rule_type
-        - condition_json
-        - result_json
+        name: { type: string }
+        rule_type: { type: string }
+        description: { type: string }
+        condition_json: { type: object, additionalProperties: true }
+        result_json: { type: object, additionalProperties: true }
+        priority: { type: integer }
+        is_active: { type: boolean }
+      required: [name, rule_type, condition_json, result_json]
 
     RuleUpdate:
       type: object
       properties:
-        name:
-          type: string
-        rule_type:
-          type: string
-        description:
-          type: string
-        condition_json:
-          type: object
-          additionalProperties: true
-        result_json:
-          type: object
-          additionalProperties: true
-        priority:
-          type: integer
-        is_active:
-          type: boolean
+        name: { type: string }
+        rule_type: { type: string }
+        description: { type: string }
+        condition_json: { type: object, additionalProperties: true }
+        result_json: { type: object, additionalProperties: true }
+        priority: { type: integer }
+        is_active: { type: boolean }
 
     Formula:
       type: object
       properties:
-        id:
-          type: integer
-        name:
-          type: string
-        formula_type:
-          type: string
-        formula_expression:
-          type: string
-        description:
-          type: ["string", "null"]
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-        updated_at:
-          type: string
-      required:
-        - id
-        - name
-        - formula_type
-        - formula_expression
-        - is_active
-        - created_at
-        - updated_at
+        id: { type: integer }
+        name: { type: string }
+        formula_type: { type: string }
+        formula_expression: { type: string }
+        description: { type: ["string", "null"] }
+        is_active: { type: boolean }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, name, formula_type, formula_expression, is_active, created_at, updated_at]
 
     FormulaInput:
       type: object
       properties:
-        name:
-          type: string
-        formula_type:
-          type: string
-        formula_expression:
-          type: string
-        description:
-          type: string
-        is_active:
-          type: boolean
-      required:
-        - name
-        - formula_type
-        - formula_expression
+        name: { type: string }
+        formula_type: { type: string }
+        formula_expression: { type: string }
+        description: { type: string }
+        is_active: { type: boolean }
+      required: [name, formula_type, formula_expression]
 
     FormulaUpdate:
       type: object
       properties:
-        name:
-          type: string
-        formula_type:
-          type: string
-        formula_expression:
-          type: string
-        description:
-          type: string
-        is_active:
-          type: boolean
+        name: { type: string }
+        formula_type: { type: string }
+        formula_expression: { type: string }
+        description: { type: string }
+        is_active: { type: boolean }
 
     KnowledgeEntry:
       type: object
       properties:
-        id:
-          type: integer
-        title:
-          type: string
-        category:
-          type: string
-        content:
-          type: string
+        id: { type: integer }
+        title: { type: string }
+        category: { type: string }
+        content: { type: string }
         tags:
           type: array
-          items:
-            type: string
-        is_published:
-          type: boolean
-        created_at:
-          type: string
-        updated_at:
-          type: string
-      required:
-        - id
-        - title
-        - category
-        - content
-        - tags
-        - is_published
-        - created_at
-        - updated_at
+          items: { type: string }
+        is_published: { type: boolean }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, title, category, content, tags, is_published, created_at, updated_at]
 
     KnowledgeEntryInput:
       type: object
       properties:
-        title:
-          type: string
-        category:
-          type: string
-        content:
-          type: string
+        title: { type: string }
+        category: { type: string }
+        content: { type: string }
         tags:
           type: array
-          items:
-            type: string
-        is_published:
-          type: boolean
-      required:
-        - title
-        - category
-        - content
+          items: { type: string }
+        is_published: { type: boolean }
+      required: [title, category, content]
 
     KnowledgeEntryUpdate:
       type: object
       properties:
-        title:
-          type: string
-        category:
-          type: string
-        content:
-          type: string
+        title: { type: string }
+        category: { type: string }
+        content: { type: string }
         tags:
           type: array
-          items:
-            type: string
-        is_published:
-          type: boolean
+          items: { type: string }
+        is_published: { type: boolean }
 
     MissingNumberRule:
       type: object
       properties:
-        id:
-          type: integer
-        missing_number:
-          type: integer
-        title:
-          type: string
+        id: { type: integer }
+        missing_number: { type: integer }
+        title: { type: string }
         strengths:
           type: array
-          items:
-            type: string
+          items: { type: string }
         weaknesses:
           type: array
-          items:
-            type: string
+          items: { type: string }
         recommendations:
           type: array
-          items:
-            type: string
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-        updated_at:
-          type: string
-      required:
-        - id
-        - missing_number
-        - title
-        - strengths
-        - weaknesses
-        - recommendations
-        - is_active
-        - created_at
-        - updated_at
+          items: { type: string }
+        is_active: { type: boolean }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, missing_number, title, strengths, weaknesses, recommendations, is_active, created_at, updated_at]
 
     MissingNumberRuleInput:
       type: object
       properties:
-        missing_number:
-          type: integer
-        title:
-          type: string
+        missing_number: { type: integer }
+        title: { type: string }
         strengths:
           type: array
-          items:
-            type: string
+          items: { type: string }
         weaknesses:
           type: array
-          items:
-            type: string
+          items: { type: string }
         recommendations:
           type: array
-          items:
-            type: string
-        is_active:
-          type: boolean
-      required:
-        - missing_number
-        - title
-        - strengths
-        - weaknesses
-        - recommendations
+          items: { type: string }
+        is_active: { type: boolean }
+      required: [missing_number, title, strengths, weaknesses, recommendations]
 
     MissingNumberRuleUpdate:
       type: object
       properties:
-        missing_number:
-          type: integer
-        title:
-          type: string
+        missing_number: { type: integer }
+        title: { type: string }
         strengths:
           type: array
-          items:
-            type: string
+          items: { type: string }
         weaknesses:
           type: array
-          items:
-            type: string
+          items: { type: string }
         recommendations:
           type: array
-          items:
-            type: string
-        is_active:
-          type: boolean
+          items: { type: string }
+        is_active: { type: boolean }
 
     RepeatedNumberRule:
       type: object
       properties:
-        id:
-          type: integer
-        number:
-          type: integer
-        count:
-          type: integer
-        title:
-          type: string
+        id: { type: integer }
+        number: { type: integer }
+        count: { type: integer }
+        title: { type: string }
         strengths:
           type: array
-          items:
-            type: string
+          items: { type: string }
         weaknesses:
           type: array
-          items:
-            type: string
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-        updated_at:
-          type: string
-      required:
-        - id
-        - number
-        - count
-        - title
-        - strengths
-        - weaknesses
-        - is_active
-        - created_at
-        - updated_at
+          items: { type: string }
+        is_active: { type: boolean }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, number, count, title, strengths, weaknesses, is_active, created_at, updated_at]
 
     RepeatedNumberRuleInput:
       type: object
       properties:
-        number:
-          type: integer
-        count:
-          type: integer
-        title:
-          type: string
+        number: { type: integer }
+        count: { type: integer }
+        title: { type: string }
         strengths:
           type: array
-          items:
-            type: string
+          items: { type: string }
         weaknesses:
           type: array
-          items:
-            type: string
-        is_active:
-          type: boolean
-      required:
-        - number
-        - count
-        - title
-        - strengths
-        - weaknesses
+          items: { type: string }
+        is_active: { type: boolean }
+      required: [number, count, title, strengths, weaknesses]
 
     RepeatedNumberRuleUpdate:
       type: object
       properties:
-        number:
-          type: integer
-        count:
-          type: integer
-        title:
-          type: string
+        number: { type: integer }
+        count: { type: integer }
+        title: { type: string }
         strengths:
           type: array
-          items:
-            type: string
+          items: { type: string }
         weaknesses:
           type: array
-          items:
-            type: string
-        is_active:
-          type: boolean
+          items: { type: string }
+        is_active: { type: boolean }
 
     ArrowRule:
       type: object
       properties:
-        id:
-          type: integer
-        name:
-          type: string
+        id: { type: integer }
+        name: { type: string }
         numbers:
           type: array
-          items:
-            type: integer
-        interpretation:
-          type: string
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-        updated_at:
-          type: string
-      required:
-        - id
-        - name
-        - numbers
-        - interpretation
-        - is_active
-        - created_at
-        - updated_at
+          items: { type: integer }
+        interpretation: { type: string }
+        is_active: { type: boolean }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, name, numbers, interpretation, is_active, created_at, updated_at]
 
     ArrowRuleInput:
       type: object
       properties:
-        name:
-          type: string
+        name: { type: string }
         numbers:
           type: array
-          items:
-            type: integer
-        interpretation:
-          type: string
-        is_active:
-          type: boolean
-      required:
-        - name
-        - numbers
-        - interpretation
+          items: { type: integer }
+        interpretation: { type: string }
+        is_active: { type: boolean }
+      required: [name, numbers, interpretation]
 
     ArrowRuleUpdate:
       type: object
       properties:
-        name:
-          type: string
+        name: { type: string }
         numbers:
           type: array
-          items:
-            type: integer
-        interpretation:
-          type: string
-        is_active:
-          type: boolean
+          items: { type: integer }
+        interpretation: { type: string }
+        is_active: { type: boolean }
+
+    NumberMeaning:
+      type: object
+      properties:
+        id: { type: integer }
+        number: { type: integer }
+        number_type: { type: string }
+        title: { type: string }
+        description: { type: string }
+        keywords_json:
+          type: array
+          items: { type: string }
+        strengths_json:
+          type: array
+          items: { type: string }
+        weaknesses_json:
+          type: array
+          items: { type: string }
+        recommendations_json:
+          type: array
+          items: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, number, number_type, title, description, keywords_json, strengths_json, weaknesses_json, recommendations_json, created_at, updated_at]
+
+    NumberMeaningInput:
+      type: object
+      properties:
+        number: { type: integer }
+        number_type: { type: string }
+        title: { type: string }
+        description: { type: string }
+        keywords_json:
+          type: array
+          items: { type: string }
+        strengths_json:
+          type: array
+          items: { type: string }
+        weaknesses_json:
+          type: array
+          items: { type: string }
+        recommendations_json:
+          type: array
+          items: { type: string }
+      required: [number, number_type, title]
+
+    NumberMeaningUpdate:
+      type: object
+      properties:
+        number: { type: integer }
+        number_type: { type: string }
+        title: { type: string }
+        description: { type: string }
+        keywords_json:
+          type: array
+          items: { type: string }
+        strengths_json:
+          type: array
+          items: { type: string }
+        weaknesses_json:
+          type: array
+          items: { type: string }
+        recommendations_json:
+          type: array
+          items: { type: string }
+
+    ProfessionMapping:
+      type: object
+      properties:
+        id: { type: integer }
+        number: { type: integer }
+        profession: { type: string }
+        weight: { type: number }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, number, profession, weight, created_at, updated_at]
+
+    ProfessionMappingInput:
+      type: object
+      properties:
+        number: { type: integer }
+        profession: { type: string }
+        weight: { type: number }
+      required: [number, profession]
+
+    ProfessionMappingUpdate:
+      type: object
+      properties:
+        number: { type: integer }
+        profession: { type: string }
+        weight: { type: number }
+
+    HealthMapping:
+      type: object
+      properties:
+        id: { type: integer }
+        number: { type: integer }
+        health_area: { type: string }
+        severity: { type: string }
+        notes: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, number, health_area, severity, notes, created_at, updated_at]
+
+    HealthMappingInput:
+      type: object
+      properties:
+        number: { type: integer }
+        health_area: { type: string }
+        severity: { type: string }
+        notes: { type: string }
+      required: [number, health_area]
+
+    HealthMappingUpdate:
+      type: object
+      properties:
+        number: { type: integer }
+        health_area: { type: string }
+        severity: { type: string }
+        notes: { type: string }
+
+    RelationshipMapping:
+      type: object
+      properties:
+        id: { type: integer }
+        number: { type: integer }
+        relationship_type: { type: string }
+        interpretation: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, number, relationship_type, interpretation, created_at, updated_at]
+
+    RelationshipMappingInput:
+      type: object
+      properties:
+        number: { type: integer }
+        relationship_type: { type: string }
+        interpretation: { type: string }
+      required: [number, relationship_type]
+
+    RelationshipMappingUpdate:
+      type: object
+      properties:
+        number: { type: integer }
+        relationship_type: { type: string }
+        interpretation: { type: string }
+
+    CompatibilityRule:
+      type: object
+      properties:
+        id: { type: integer }
+        number_a: { type: integer }
+        number_b: { type: integer }
+        compatibility_score: { type: integer }
+        interpretation: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, number_a, number_b, compatibility_score, interpretation, created_at, updated_at]
+
+    CompatibilityRuleInput:
+      type: object
+      properties:
+        number_a: { type: integer }
+        number_b: { type: integer }
+        compatibility_score: { type: integer }
+        interpretation: { type: string }
+      required: [number_a, number_b]
+
+    CompatibilityRuleUpdate:
+      type: object
+      properties:
+        number_a: { type: integer }
+        number_b: { type: integer }
+        compatibility_score: { type: integer }
+        interpretation: { type: string }
+
+    Remedy:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        category: { type: string }
+        description: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, title, category, description, created_at, updated_at]
+
+    RemedyInput:
+      type: object
+      properties:
+        title: { type: string }
+        category: { type: string }
+        description: { type: string }
+      required: [title, category]
+
+    RemedyUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        category: { type: string }
+        description: { type: string }
+
+    RuleTag:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        created_at: { type: string }
+      required: [id, name, created_at]
+
+    RuleTagInput:
+      type: object
+      properties:
+        name: { type: string }
+      required: [name]
+
+    RuleCategory:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+      required: [id, name, description, created_at, updated_at]
+
+    RuleCategoryInput:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+      required: [name]
+
+    RuleCategoryUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
 
     ReportRequest:
       type: object
       properties:
-        name:
-          type: string
+        name: { type: string }
         date_of_birth:
           type: string
           description: "ISO date string: YYYY-MM-DD"
-      required:
-        - name
-        - date_of_birth
+      required: [name, date_of_birth]
 
     NumerologyReport:
       type: object
@@ -1156,87 +1783,149 @@ components:
         subject:
           type: object
           properties:
-            name:
-              type: string
-            date_of_birth:
-              type: string
-          required:
-            - name
-            - date_of_birth
+            name: { type: string }
+            date_of_birth: { type: string }
+          required: [name, date_of_birth]
         numbers:
           $ref: "#/components/schemas/CalculatedNumbers"
+        personality_analysis:
+          $ref: "#/components/schemas/ReportSection"
+        career_analysis:
+          $ref: "#/components/schemas/CareerSection"
+        relationship_analysis:
+          $ref: "#/components/schemas/RelationshipSection"
+        health_analysis:
+          $ref: "#/components/schemas/HealthSection"
+        money_analysis:
+          $ref: "#/components/schemas/ReportSection"
+        travel_analysis:
+          $ref: "#/components/schemas/ReportSection"
+        remedies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Remedy"
+        future_predictions:
+          $ref: "#/components/schemas/FuturePredictions"
+        lo_shu:
+          $ref: "#/components/schemas/LoShuResult"
         interpretations:
           type: array
           items:
             $ref: "#/components/schemas/RuleInterpretation"
-        lo_shu:
-          $ref: "#/components/schemas/LoShuResult"
-        generated_at:
-          type: string
-      required:
-        - subject
-        - numbers
-        - interpretations
-        - lo_shu
-        - generated_at
+        generated_at: { type: string }
+      required: [subject, numbers, personality_analysis, career_analysis, relationship_analysis, health_analysis, money_analysis, travel_analysis, remedies, future_predictions, lo_shu, interpretations, generated_at]
+
+    ReportSection:
+      type: object
+      properties:
+        title: { type: string }
+        number: { type: integer }
+        meanings:
+          type: array
+          items:
+            $ref: "#/components/schemas/NumberMeaning"
+        summary: { type: string }
+      required: [title, number, meanings, summary]
+
+    CareerSection:
+      type: object
+      properties:
+        title: { type: string }
+        number: { type: integer }
+        professions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfessionMapping"
+        meanings:
+          type: array
+          items:
+            $ref: "#/components/schemas/NumberMeaning"
+        summary: { type: string }
+      required: [title, number, professions, meanings, summary]
+
+    RelationshipSection:
+      type: object
+      properties:
+        title: { type: string }
+        number: { type: integer }
+        mappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RelationshipMapping"
+        meanings:
+          type: array
+          items:
+            $ref: "#/components/schemas/NumberMeaning"
+        summary: { type: string }
+      required: [title, number, mappings, meanings, summary]
+
+    HealthSection:
+      type: object
+      properties:
+        title: { type: string }
+        number: { type: integer }
+        health_areas:
+          type: array
+          items:
+            $ref: "#/components/schemas/HealthMapping"
+        meanings:
+          type: array
+          items:
+            $ref: "#/components/schemas/NumberMeaning"
+        summary: { type: string }
+      required: [title, number, health_areas, meanings, summary]
+
+    FuturePredictions:
+      type: object
+      properties:
+        personal_year: { type: integer }
+        personal_month: { type: integer }
+        personal_day: { type: integer }
+        year_meaning:
+          type: array
+          items:
+            $ref: "#/components/schemas/NumberMeaning"
+        month_meaning:
+          type: array
+          items:
+            $ref: "#/components/schemas/NumberMeaning"
+        interpretations:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleInterpretation"
+      required: [personal_year, personal_month, personal_day, year_meaning, month_meaning, interpretations]
 
     CalculatedNumbers:
       type: object
       properties:
-        birthday_number:
-          type: integer
-        destiny_number:
-          type: integer
-        personality_number:
-          type: ["integer", "null"]
-        personal_year:
-          type: integer
-        personal_month:
-          type: integer
-        personal_day:
-          type: integer
-      required:
-        - birthday_number
-        - destiny_number
-        - personal_year
-        - personal_month
-        - personal_day
+        birthday_number: { type: integer }
+        destiny_number: { type: integer }
+        personality_number: { type: ["integer", "null"] }
+        personal_year: { type: integer }
+        personal_month: { type: integer }
+        personal_day: { type: integer }
+      required: [birthday_number, destiny_number, personal_year, personal_month, personal_day]
 
     RuleInterpretation:
       type: object
       properties:
-        rule_id:
-          type: integer
-        rule_name:
-          type: string
-        rule_type:
-          type: string
+        rule_id: { type: integer }
+        rule_name: { type: string }
+        rule_type: { type: string }
         keywords:
           type: array
-          items:
-            type: string
+          items: { type: string }
         strengths:
           type: array
-          items:
-            type: string
+          items: { type: string }
         weaknesses:
           type: array
-          items:
-            type: string
+          items: { type: string }
         recommendations:
           type: array
-          items:
-            type: string
-        description:
-          type: ["string", "null"]
-      required:
-        - rule_id
-        - rule_name
-        - rule_type
-        - keywords
-        - strengths
-        - weaknesses
-        - recommendations
+          items: { type: string }
+        description: { type: ["string", "null"] }
+      required: [rule_id, rule_name, rule_type, keywords, strengths, weaknesses, recommendations]
 
     LoShuResult:
       type: object
@@ -1245,20 +1934,17 @@ components:
           type: array
           items:
             type: array
-            items:
-              type: integer
+            items: { type: integer }
         missing_numbers:
           type: array
-          items:
-            type: integer
+          items: { type: integer }
         repeated_numbers:
           type: array
           items:
             $ref: "#/components/schemas/RepeatedEntry"
         active_arrows:
           type: array
-          items:
-            type: string
+          items: { type: string }
         missing_interpretations:
           type: array
           items:
@@ -1271,22 +1957,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ArrowRule"
-      required:
-        - grid
-        - missing_numbers
-        - repeated_numbers
-        - active_arrows
-        - missing_interpretations
-        - repeated_interpretations
-        - arrow_interpretations
+      required: [grid, missing_numbers, repeated_numbers, active_arrows, missing_interpretations, repeated_interpretations, arrow_interpretations]
 
     RepeatedEntry:
       type: object
       properties:
-        number:
-          type: integer
-        count:
-          type: integer
-      required:
-        - number
-        - count
+        number: { type: integer }
+        count: { type: integer }
+      required: [number, count]

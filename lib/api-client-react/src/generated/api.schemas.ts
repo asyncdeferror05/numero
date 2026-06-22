@@ -39,6 +39,7 @@ export interface DashboardStats {
   activeFormulas: number;
   totalKnowledgeEntries: number;
   totalLoShuRules: number;
+  totalNumberMeanings: number;
   rulesByType: RuleTypeCount[];
   recentRules: Rule[];
 }
@@ -210,6 +211,181 @@ export interface ArrowRuleUpdate {
   is_active?: boolean;
 }
 
+export interface NumberMeaning {
+  id: number;
+  number: number;
+  number_type: string;
+  title: string;
+  description: string;
+  keywords_json: string[];
+  strengths_json: string[];
+  weaknesses_json: string[];
+  recommendations_json: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NumberMeaningInput {
+  number: number;
+  number_type: string;
+  title: string;
+  description?: string;
+  keywords_json?: string[];
+  strengths_json?: string[];
+  weaknesses_json?: string[];
+  recommendations_json?: string[];
+}
+
+export interface NumberMeaningUpdate {
+  number?: number;
+  number_type?: string;
+  title?: string;
+  description?: string;
+  keywords_json?: string[];
+  strengths_json?: string[];
+  weaknesses_json?: string[];
+  recommendations_json?: string[];
+}
+
+export interface ProfessionMapping {
+  id: number;
+  number: number;
+  profession: string;
+  weight: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProfessionMappingInput {
+  number: number;
+  profession: string;
+  weight?: number;
+}
+
+export interface ProfessionMappingUpdate {
+  number?: number;
+  profession?: string;
+  weight?: number;
+}
+
+export interface HealthMapping {
+  id: number;
+  number: number;
+  health_area: string;
+  severity: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HealthMappingInput {
+  number: number;
+  health_area: string;
+  severity?: string;
+  notes?: string;
+}
+
+export interface HealthMappingUpdate {
+  number?: number;
+  health_area?: string;
+  severity?: string;
+  notes?: string;
+}
+
+export interface RelationshipMapping {
+  id: number;
+  number: number;
+  relationship_type: string;
+  interpretation: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RelationshipMappingInput {
+  number: number;
+  relationship_type: string;
+  interpretation?: string;
+}
+
+export interface RelationshipMappingUpdate {
+  number?: number;
+  relationship_type?: string;
+  interpretation?: string;
+}
+
+export interface CompatibilityRule {
+  id: number;
+  number_a: number;
+  number_b: number;
+  compatibility_score: number;
+  interpretation: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CompatibilityRuleInput {
+  number_a: number;
+  number_b: number;
+  compatibility_score?: number;
+  interpretation?: string;
+}
+
+export interface CompatibilityRuleUpdate {
+  number_a?: number;
+  number_b?: number;
+  compatibility_score?: number;
+  interpretation?: string;
+}
+
+export interface Remedy {
+  id: number;
+  title: string;
+  category: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RemedyInput {
+  title: string;
+  category: string;
+  description?: string;
+}
+
+export interface RemedyUpdate {
+  title?: string;
+  category?: string;
+  description?: string;
+}
+
+export interface RuleTag {
+  id: number;
+  name: string;
+  created_at: string;
+}
+
+export interface RuleTagInput {
+  name: string;
+}
+
+export interface RuleCategory {
+  id: number;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RuleCategoryInput {
+  name: string;
+  description?: string;
+}
+
+export interface RuleCategoryUpdate {
+  name?: string;
+  description?: string;
+}
+
 export interface ReportRequest {
   name: string;
   /** ISO date string: YYYY-MM-DD */
@@ -231,6 +407,37 @@ export interface CalculatedNumbers {
   personal_day: number;
 }
 
+export interface ReportSection {
+  title: string;
+  number: number;
+  meanings: NumberMeaning[];
+  summary: string;
+}
+
+export interface CareerSection {
+  title: string;
+  number: number;
+  professions: ProfessionMapping[];
+  meanings: NumberMeaning[];
+  summary: string;
+}
+
+export interface RelationshipSection {
+  title: string;
+  number: number;
+  mappings: RelationshipMapping[];
+  meanings: NumberMeaning[];
+  summary: string;
+}
+
+export interface HealthSection {
+  title: string;
+  number: number;
+  health_areas: HealthMapping[];
+  meanings: NumberMeaning[];
+  summary: string;
+}
+
 export interface RuleInterpretation {
   rule_id: number;
   rule_name: string;
@@ -241,6 +448,15 @@ export interface RuleInterpretation {
   recommendations: string[];
   /** @nullable */
   description?: string | null;
+}
+
+export interface FuturePredictions {
+  personal_year: number;
+  personal_month: number;
+  personal_day: number;
+  year_meaning: NumberMeaning[];
+  month_meaning: NumberMeaning[];
+  interpretations: RuleInterpretation[];
 }
 
 export interface RepeatedEntry {
@@ -261,8 +477,16 @@ export interface LoShuResult {
 export interface NumerologyReport {
   subject: NumerologyReportSubject;
   numbers: CalculatedNumbers;
-  interpretations: RuleInterpretation[];
+  personality_analysis: ReportSection;
+  career_analysis: CareerSection;
+  relationship_analysis: RelationshipSection;
+  health_analysis: HealthSection;
+  money_analysis: ReportSection;
+  travel_analysis: ReportSection;
+  remedies: Remedy[];
+  future_predictions: FuturePredictions;
   lo_shu: LoShuResult;
+  interpretations: RuleInterpretation[];
   generated_at: string;
 }
 
@@ -279,5 +503,32 @@ is_active?: boolean;
 export type ListKnowledgeEntriesParams = {
 category?: string;
 search?: string;
+};
+
+export type ListNumberMeaningsParams = {
+number_type?: string;
+number?: number;
+};
+
+export type ListProfessionMappingsParams = {
+number?: number;
+};
+
+export type ListHealthMappingsParams = {
+number?: number;
+};
+
+export type ListRelationshipMappingsParams = {
+number?: number;
+relationship_type?: string;
+};
+
+export type ListCompatibilityRulesParams = {
+number_a?: number;
+number_b?: number;
+};
+
+export type ListRemediesParams = {
+category?: string;
 };
 

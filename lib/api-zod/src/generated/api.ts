@@ -26,6 +26,7 @@ export const GetDashboardStatsResponse = zod.object({
   "activeFormulas": zod.number(),
   "totalKnowledgeEntries": zod.number(),
   "totalLoShuRules": zod.number(),
+  "totalNumberMeanings": zod.number(),
   "rulesByType": zod.array(zod.object({
   "type": zod.string(),
   "count": zod.number()
@@ -565,6 +566,491 @@ export const DeleteArrowRuleParams = zod.object({
 
 
 /**
+ * @summary List number meanings
+ */
+export const ListNumberMeaningsQueryParams = zod.object({
+  "number_type": zod.coerce.string().optional(),
+  "number": zod.coerce.number().optional()
+})
+
+export const ListNumberMeaningsResponseItem = zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+export const ListNumberMeaningsResponse = zod.array(ListNumberMeaningsResponseItem)
+
+
+/**
+ * @summary Create a number meaning
+ */
+export const CreateNumberMeaningBody = zod.object({
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "keywords_json": zod.array(zod.string()).optional(),
+  "strengths_json": zod.array(zod.string()).optional(),
+  "weaknesses_json": zod.array(zod.string()).optional(),
+  "recommendations_json": zod.array(zod.string()).optional()
+})
+
+
+/**
+ * @summary Get a number meaning
+ */
+export const GetNumberMeaningParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetNumberMeaningResponse = zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Update a number meaning
+ */
+export const UpdateNumberMeaningParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateNumberMeaningBody = zod.object({
+  "number": zod.number().optional(),
+  "number_type": zod.string().optional(),
+  "title": zod.string().optional(),
+  "description": zod.string().optional(),
+  "keywords_json": zod.array(zod.string()).optional(),
+  "strengths_json": zod.array(zod.string()).optional(),
+  "weaknesses_json": zod.array(zod.string()).optional(),
+  "recommendations_json": zod.array(zod.string()).optional()
+})
+
+export const UpdateNumberMeaningResponse = zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Delete a number meaning
+ */
+export const DeleteNumberMeaningParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List profession mappings
+ */
+export const ListProfessionMappingsQueryParams = zod.object({
+  "number": zod.coerce.number().optional()
+})
+
+export const ListProfessionMappingsResponseItem = zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "profession": zod.string(),
+  "weight": zod.number(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+export const ListProfessionMappingsResponse = zod.array(ListProfessionMappingsResponseItem)
+
+
+/**
+ * @summary Create a profession mapping
+ */
+export const CreateProfessionMappingBody = zod.object({
+  "number": zod.number(),
+  "profession": zod.string(),
+  "weight": zod.number().optional()
+})
+
+
+/**
+ * @summary Update a profession mapping
+ */
+export const UpdateProfessionMappingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateProfessionMappingBody = zod.object({
+  "number": zod.number().optional(),
+  "profession": zod.string().optional(),
+  "weight": zod.number().optional()
+})
+
+export const UpdateProfessionMappingResponse = zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "profession": zod.string(),
+  "weight": zod.number(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Delete a profession mapping
+ */
+export const DeleteProfessionMappingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List health mappings
+ */
+export const ListHealthMappingsQueryParams = zod.object({
+  "number": zod.coerce.number().optional()
+})
+
+export const ListHealthMappingsResponseItem = zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "health_area": zod.string(),
+  "severity": zod.string(),
+  "notes": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+export const ListHealthMappingsResponse = zod.array(ListHealthMappingsResponseItem)
+
+
+/**
+ * @summary Create a health mapping
+ */
+export const CreateHealthMappingBody = zod.object({
+  "number": zod.number(),
+  "health_area": zod.string(),
+  "severity": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a health mapping
+ */
+export const UpdateHealthMappingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateHealthMappingBody = zod.object({
+  "number": zod.number().optional(),
+  "health_area": zod.string().optional(),
+  "severity": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateHealthMappingResponse = zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "health_area": zod.string(),
+  "severity": zod.string(),
+  "notes": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Delete a health mapping
+ */
+export const DeleteHealthMappingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List relationship mappings
+ */
+export const ListRelationshipMappingsQueryParams = zod.object({
+  "number": zod.coerce.number().optional(),
+  "relationship_type": zod.coerce.string().optional()
+})
+
+export const ListRelationshipMappingsResponseItem = zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "relationship_type": zod.string(),
+  "interpretation": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+export const ListRelationshipMappingsResponse = zod.array(ListRelationshipMappingsResponseItem)
+
+
+/**
+ * @summary Create a relationship mapping
+ */
+export const CreateRelationshipMappingBody = zod.object({
+  "number": zod.number(),
+  "relationship_type": zod.string(),
+  "interpretation": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a relationship mapping
+ */
+export const UpdateRelationshipMappingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateRelationshipMappingBody = zod.object({
+  "number": zod.number().optional(),
+  "relationship_type": zod.string().optional(),
+  "interpretation": zod.string().optional()
+})
+
+export const UpdateRelationshipMappingResponse = zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "relationship_type": zod.string(),
+  "interpretation": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Delete a relationship mapping
+ */
+export const DeleteRelationshipMappingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List compatibility rules
+ */
+export const ListCompatibilityRulesQueryParams = zod.object({
+  "number_a": zod.coerce.number().optional(),
+  "number_b": zod.coerce.number().optional()
+})
+
+export const ListCompatibilityRulesResponseItem = zod.object({
+  "id": zod.number(),
+  "number_a": zod.number(),
+  "number_b": zod.number(),
+  "compatibility_score": zod.number(),
+  "interpretation": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+export const ListCompatibilityRulesResponse = zod.array(ListCompatibilityRulesResponseItem)
+
+
+/**
+ * @summary Create a compatibility rule
+ */
+export const CreateCompatibilityRuleBody = zod.object({
+  "number_a": zod.number(),
+  "number_b": zod.number(),
+  "compatibility_score": zod.number().optional(),
+  "interpretation": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a compatibility rule
+ */
+export const UpdateCompatibilityRuleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateCompatibilityRuleBody = zod.object({
+  "number_a": zod.number().optional(),
+  "number_b": zod.number().optional(),
+  "compatibility_score": zod.number().optional(),
+  "interpretation": zod.string().optional()
+})
+
+export const UpdateCompatibilityRuleResponse = zod.object({
+  "id": zod.number(),
+  "number_a": zod.number(),
+  "number_b": zod.number(),
+  "compatibility_score": zod.number(),
+  "interpretation": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Delete a compatibility rule
+ */
+export const DeleteCompatibilityRuleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List remedies
+ */
+export const ListRemediesQueryParams = zod.object({
+  "category": zod.coerce.string().optional()
+})
+
+export const ListRemediesResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+export const ListRemediesResponse = zod.array(ListRemediesResponseItem)
+
+
+/**
+ * @summary Create a remedy
+ */
+export const CreateRemedyBody = zod.object({
+  "title": zod.string(),
+  "category": zod.string(),
+  "description": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a remedy
+ */
+export const UpdateRemedyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateRemedyBody = zod.object({
+  "title": zod.string().optional(),
+  "category": zod.string().optional(),
+  "description": zod.string().optional()
+})
+
+export const UpdateRemedyResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Delete a remedy
+ */
+export const DeleteRemedyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List rule tags
+ */
+export const ListRuleTagsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "created_at": zod.string()
+})
+export const ListRuleTagsResponse = zod.array(ListRuleTagsResponseItem)
+
+
+/**
+ * @summary Create a rule tag
+ */
+export const CreateRuleTagBody = zod.object({
+  "name": zod.string()
+})
+
+
+/**
+ * @summary Delete a rule tag
+ */
+export const DeleteRuleTagParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List rule categories
+ */
+export const ListRuleCategoriesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+export const ListRuleCategoriesResponse = zod.array(ListRuleCategoriesResponseItem)
+
+
+/**
+ * @summary Create a rule category
+ */
+export const CreateRuleCategoryBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a rule category
+ */
+export const UpdateRuleCategoryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateRuleCategoryBody = zod.object({
+  "name": zod.string().optional(),
+  "description": zod.string().optional()
+})
+
+export const UpdateRuleCategoryResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Delete a rule category
+ */
+export const DeleteRuleCategoryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary Generate a numerology report
  */
 export const GenerateReportBody = zod.object({
@@ -585,6 +1071,177 @@ export const GenerateReportResponse = zod.object({
   "personal_month": zod.number(),
   "personal_day": zod.number()
 }),
+  "personality_analysis": zod.object({
+  "title": zod.string(),
+  "number": zod.number(),
+  "meanings": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "summary": zod.string()
+}),
+  "career_analysis": zod.object({
+  "title": zod.string(),
+  "number": zod.number(),
+  "professions": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "profession": zod.string(),
+  "weight": zod.number(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "meanings": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "summary": zod.string()
+}),
+  "relationship_analysis": zod.object({
+  "title": zod.string(),
+  "number": zod.number(),
+  "mappings": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "relationship_type": zod.string(),
+  "interpretation": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "meanings": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "summary": zod.string()
+}),
+  "health_analysis": zod.object({
+  "title": zod.string(),
+  "number": zod.number(),
+  "health_areas": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "health_area": zod.string(),
+  "severity": zod.string(),
+  "notes": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "meanings": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "summary": zod.string()
+}),
+  "money_analysis": zod.object({
+  "title": zod.string(),
+  "number": zod.number(),
+  "meanings": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "summary": zod.string()
+}),
+  "travel_analysis": zod.object({
+  "title": zod.string(),
+  "number": zod.number(),
+  "meanings": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "summary": zod.string()
+}),
+  "remedies": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "future_predictions": zod.object({
+  "personal_year": zod.number(),
+  "personal_month": zod.number(),
+  "personal_day": zod.number(),
+  "year_meaning": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
+  "month_meaning": zod.array(zod.object({
+  "id": zod.number(),
+  "number": zod.number(),
+  "number_type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "keywords_json": zod.array(zod.string()),
+  "strengths_json": zod.array(zod.string()),
+  "weaknesses_json": zod.array(zod.string()),
+  "recommendations_json": zod.array(zod.string()),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})),
   "interpretations": zod.array(zod.object({
   "rule_id": zod.number(),
   "rule_name": zod.string(),
@@ -594,7 +1251,8 @@ export const GenerateReportResponse = zod.object({
   "weaknesses": zod.array(zod.string()),
   "recommendations": zod.array(zod.string()),
   "description": zod.string().nullish()
-})),
+}))
+}),
   "lo_shu": zod.object({
   "grid": zod.array(zod.array(zod.number())),
   "missing_numbers": zod.array(zod.number()),
@@ -635,6 +1293,16 @@ export const GenerateReportResponse = zod.object({
   "updated_at": zod.string()
 }))
 }),
+  "interpretations": zod.array(zod.object({
+  "rule_id": zod.number(),
+  "rule_name": zod.string(),
+  "rule_type": zod.string(),
+  "keywords": zod.array(zod.string()),
+  "strengths": zod.array(zod.string()),
+  "weaknesses": zod.array(zod.string()),
+  "recommendations": zod.array(zod.string()),
+  "description": zod.string().nullish()
+})),
   "generated_at": zod.string()
 })
 

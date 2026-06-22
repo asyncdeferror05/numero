@@ -2,7 +2,7 @@ import { useGetDashboardStats } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollText, FunctionSquare, Library, Grid3X3, CheckCircle2, Clock } from "lucide-react";
+import { ScrollText, FunctionSquare, Library, Grid3X3, CheckCircle2, Clock, Hash } from "lucide-react";
 
 const RULE_TYPE_LABELS: Record<string, string> = {
   personality_number: "Personality",
@@ -55,11 +55,12 @@ export function DashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard title="Total Rules" value={stats?.totalRules ?? 0} sub={`${stats?.activeRules ?? 0} active`} icon={ScrollText} loading={isLoading} />
         <StatCard title="Formulas" value={stats?.totalFormulas ?? 0} sub={`${stats?.activeFormulas ?? 0} active`} icon={FunctionSquare} loading={isLoading} />
         <StatCard title="Knowledge Entries" value={stats?.totalKnowledgeEntries ?? 0} icon={Library} loading={isLoading} />
         <StatCard title="Lo Shu Rules" value={stats?.totalLoShuRules ?? 0} icon={Grid3X3} loading={isLoading} />
+        <StatCard title="Number Meanings" value={stats?.totalNumberMeanings ?? 0} icon={Hash} loading={isLoading} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

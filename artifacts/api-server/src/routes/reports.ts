@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { rulesTable, formulasTable, missingNumberRulesTable, repeatedNumberRulesTable, arrowRulesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import {
+  rulesTable, missingNumberRulesTable, repeatedNumberRulesTable, arrowRulesTable,
+  numberMeaningsTable, professionMappingsTable, healthMappingsTable,
+  relationshipMappingsTable, remediesTable,
+} from "@workspace/db";
+import { eq, and, inArray } from "drizzle-orm";
 import { GenerateReportBody } from "@workspace/api-zod";
 
 const router = Router();
@@ -17,12 +21,7 @@ function sumDigits(n: number): number {
   return String(n).split("").reduce((sum, d) => sum + Number(d), 0);
 }
 
-function buildLoShuGrid(dob: Date): {
-  grid: number[][];
-  digitCounts: Record<number, number>;
-  missingNumbers: number[];
-  repeatedNumbers: Array<{ number: number; count: number }>;
-} {
+function buildLoShuGrid(dob: Date) {
   const dobStr = [
     String(dob.getFullYear()),
     String(dob.getMonth() + 1).padStart(2, "0"),
@@ -35,26 +34,20 @@ function buildLoShuGrid(dob: Date): {
     if (d >= 1 && d <= 9) digitCounts[d]++;
   }
 
-  // Lo Shu grid layout: positions 4,9,2 / 3,5,7 / 8,1,6
   const grid = [
     [digitCounts[4], digitCounts[9], digitCounts[2]],
     [digitCounts[3], digitCounts[5], digitCounts[7]],
     [digitCounts[8], digitCounts[1], digitCounts[6]],
   ];
 
-  const missingNumbers = Object.entries(digitCounts)
-    .filter(([, v]) => v === 0)
-    .map(([k]) => Number(k));
-
-  const repeatedNumbers = Object.entries(digitCounts)
-    .filter(([, v]) => v > 1)
-    .map(([k, v]) => ({ number: Number(k), count: v }));
+  const missingNumbers = Object.entries(digitCounts).filter(([, v]) => v === 0).map(([k]) => Number(k));
+  const repeatedNumbers = Object.entries(digitCounts).filter(([, v]) => v > 1).map(([k, v]) => ({ number: Number(k), count: v }));
 
   return { grid, digitCounts, missingNumbers, repeatedNumbers };
 }
 
-function getActiveArrows(digitCounts: Record<number, number>): string[] {
-  const ARROWS: Array<{ name: string; numbers: number[] }> = [
+function getActiveArrows(digitCounts: Record<number, number>) {
+  const ARROWS = [
     { name: "Arrow of Determination", numbers: [1, 5, 9] },
     { name: "Arrow of Intellect", numbers: [3, 5, 7] },
     { name: "Arrow of Practicality", numbers: [1, 2, 3] },
@@ -64,10 +57,15 @@ function getActiveArrows(digitCounts: Record<number, number>): string[] {
     { name: "Arrow of Planner", numbers: [4, 3, 8] },
     { name: "Arrow of the Enquirer", numbers: [2, 7, 6] },
   ];
-  return ARROWS
-    .filter((a) => a.numbers.every((n) => (digitCounts[n] ?? 0) > 0))
-    .map((a) => a.name);
+  return ARROWS.filter((a) => a.numbers.every((n) => (digitCounts[n] ?? 0) > 0)).map((a) => a.name);
 }
+
+const fmt = <T extends { created_at: Date; updated_at: Date }>(r: T) => ({
+  ...r, created_at: r.created_at.toISOString(), updated_at: r.updated_at.toISOString(),
+});
+const fmtTag = <T extends { created_at: Date }>(r: T) => ({
+  ...r, created_at: r.created_at.toISOString(),
+});
 
 router.post("/reports/generate", async (req, res) => {
   const parsed = GenerateReportBody.safeParse(req.body);
@@ -75,18 +73,15 @@ router.post("/reports/generate", async (req, res) => {
 
   const { name, date_of_birth } = parsed.data;
   const dob = new Date(date_of_birth);
-
-  if (isNaN(dob.getTime())) {
-    res.status(400).json({ error: "Invalid date_of_birth" });
-    return;
-  }
+  if (isNaN(dob.getTime())) { res.status(400).json({ error: "Invalid date_of_birth" }); return; }
 
   const day = dob.getDate();
   const month = dob.getMonth() + 1;
   const year = dob.getFullYear();
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
-  const currentDay = new Date().getDate();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentDay = now.getDate();
 
   const birthdayNumber = reduceToSingleDigit(day);
   const destinyNumber = reduceToSingleDigit(sumDigits(day) + sumDigits(month) + sumDigits(year));
@@ -94,19 +89,21 @@ router.post("/reports/generate", async (req, res) => {
   const personalMonth = reduceToSingleDigit(personalYear + currentMonth);
   const personalDay = reduceToSingleDigit(personalMonth + currentDay);
 
-  // Fetch active rules and match conditions
-  const [allRules, missingRules, repeatedRules, arrowRulesDb] = await Promise.all([
+  // Fetch everything in parallel
+  const [
+    allRules, missingRulesDb, repeatedRulesDb, arrowRulesDb,
+    allMeanings, allProfessions, allHealth, allRelationships, allRemedies,
+  ] = await Promise.all([
     db.select().from(rulesTable).where(eq(rulesTable.is_active, true)),
     db.select().from(missingNumberRulesTable).where(eq(missingNumberRulesTable.is_active, true)),
     db.select().from(repeatedNumberRulesTable).where(eq(repeatedNumberRulesTable.is_active, true)),
     db.select().from(arrowRulesTable).where(eq(arrowRulesTable.is_active, true)),
+    db.select().from(numberMeaningsTable),
+    db.select().from(professionMappingsTable),
+    db.select().from(healthMappingsTable),
+    db.select().from(relationshipMappingsTable),
+    db.select().from(remediesTable),
   ]);
-
-  const fmt = <T extends { created_at: Date; updated_at: Date }>(r: T) => ({
-    ...r,
-    created_at: r.created_at.toISOString(),
-    updated_at: r.updated_at.toISOString(),
-  });
 
   const numberMap: Record<string, number> = {
     birthday_number: birthdayNumber,
@@ -116,13 +113,12 @@ router.post("/reports/generate", async (req, res) => {
     personal_day: personalDay,
   };
 
+  // Rule-based interpretations
   const interpretations = allRules
     .filter((rule) => {
       const cond = rule.condition_json as Record<string, unknown>;
       for (const [key, val] of Object.entries(cond)) {
-        if (key in numberMap) {
-          if (numberMap[key] !== Number(val)) return false;
-        }
+        if (key in numberMap && numberMap[key] !== Number(val)) return false;
       }
       return true;
     })
@@ -140,21 +136,97 @@ router.post("/reports/generate", async (req, res) => {
       };
     });
 
+  // Lo Shu
   const { grid, digitCounts, missingNumbers, repeatedNumbers } = buildLoShuGrid(dob);
   const activeArrows = getActiveArrows(digitCounts);
+  const missingInterps = missingRulesDb.filter((r) => missingNumbers.includes(r.missing_number)).map(fmt);
+  const repeatedInterps = repeatedRulesDb.filter((r) => repeatedNumbers.some((rn) => rn.number === r.number && rn.count >= r.count)).map(fmt);
+  const arrowInterps = arrowRulesDb.filter((r) => activeArrows.includes(r.name)).map(fmt);
 
-  // Match Lo Shu rules from DB
-  const missingInterps = missingRules
-    .filter((r) => missingNumbers.includes(r.missing_number))
-    .map(fmt);
+  // Helper: get meanings for a number + type
+  const getMeanings = (num: number, type: string) => allMeanings.filter((m) => m.number === num && m.number_type === type).map(fmt);
 
-  const repeatedInterps = repeatedRules
-    .filter((r) => repeatedNumbers.some((rn) => rn.number === r.number && rn.count >= r.count))
-    .map(fmt);
+  // ─── Personality Analysis ────────────────────────────────────────────────────
+  const personalityMeanings = getMeanings(birthdayNumber, "personality");
+  const personalityKeywords = personalityMeanings.flatMap((m) => m.keywords_json);
+  const personality_analysis = {
+    title: "Personality Analysis",
+    number: birthdayNumber,
+    meanings: personalityMeanings,
+    summary: personalityMeanings[0]?.description || `Birthday Number ${birthdayNumber}: ${personalityKeywords.slice(0, 3).join(", ")}`,
+  };
 
-  const arrowInterps = arrowRulesDb
-    .filter((r) => activeArrows.includes(r.name))
+  // ─── Career Analysis ─────────────────────────────────────────────────────────
+  const careerMeanings = getMeanings(destinyNumber, "destiny");
+  const professions = allProfessions
+    .filter((p) => p.number === destinyNumber)
+    .sort((a, b) => b.weight - a.weight)
     .map(fmt);
+  const career_analysis = {
+    title: "Career Analysis",
+    number: destinyNumber,
+    professions,
+    meanings: careerMeanings,
+    summary: careerMeanings[0]?.description || `Destiny Number ${destinyNumber} — ${professions.map((p) => p.profession).slice(0, 3).join(", ")}`,
+  };
+
+  // ─── Relationship Analysis ────────────────────────────────────────────────────
+  const relMeanings = getMeanings(birthdayNumber, "birthday");
+  const relMappings = allRelationships.filter((r) => r.number === birthdayNumber).map(fmt);
+  const relationship_analysis = {
+    title: "Relationship Analysis",
+    number: birthdayNumber,
+    mappings: relMappings,
+    meanings: relMeanings,
+    summary: relMappings[0]?.interpretation || relMeanings[0]?.description || `Birthday Number ${birthdayNumber} in relationships`,
+  };
+
+  // ─── Health Analysis ──────────────────────────────────────────────────────────
+  const healthMeanings = getMeanings(birthdayNumber, "birthday");
+  const healthAreas = allHealth.filter((h) => h.number === birthdayNumber).map(fmt);
+  const health_analysis = {
+    title: "Health Analysis",
+    number: birthdayNumber,
+    health_areas: healthAreas,
+    meanings: healthMeanings,
+    summary: healthAreas.map((h) => `${h.health_area} (${h.severity})`).join("; ") || `Health focus for number ${birthdayNumber}`,
+  };
+
+  // ─── Money Analysis ───────────────────────────────────────────────────────────
+  const moneyMeanings = getMeanings(destinyNumber, "destiny");
+  const moneyRuleInterps = interpretations.filter((i) => ["personal_year", "destiny_number"].includes(i.rule_type));
+  const money_analysis = {
+    title: "Money Analysis",
+    number: destinyNumber,
+    meanings: moneyMeanings,
+    summary: moneyMeanings[0]?.description || `Financial outlook for Destiny Number ${destinyNumber}`,
+  };
+
+  // ─── Travel Analysis ──────────────────────────────────────────────────────────
+  const travelMeanings = getMeanings(personalYear, "personal_year");
+  const travel_analysis = {
+    title: "Travel & Movement",
+    number: personalYear,
+    meanings: travelMeanings,
+    summary: travelMeanings[0]?.description || `Personal Year ${personalYear}: ${travelMeanings[0]?.keywords_json.slice(0, 3).join(", ") || "movement and change"}`,
+  };
+
+  // ─── Remedies ─────────────────────────────────────────────────────────────────
+  // Pull remedies relevant to identified weaknesses (pick up to 5)
+  const relevantRemedies = allRemedies.slice(0, 5).map(fmt);
+
+  // ─── Future Predictions ──────────────────────────────────────────────────────
+  const yearMeanings = getMeanings(personalYear, "personal_year");
+  const monthMeanings = getMeanings(personalMonth, "personal_month");
+  const futureInterps = interpretations.filter((i) => ["personal_year", "personal_month", "personal_day"].includes(i.rule_type));
+  const future_predictions = {
+    personal_year: personalYear,
+    personal_month: personalMonth,
+    personal_day: personalDay,
+    year_meaning: yearMeanings,
+    month_meaning: monthMeanings,
+    interpretations: futureInterps,
+  };
 
   res.json({
     subject: { name, date_of_birth },
@@ -166,7 +238,14 @@ router.post("/reports/generate", async (req, res) => {
       personal_month: personalMonth,
       personal_day: personalDay,
     },
-    interpretations,
+    personality_analysis,
+    career_analysis,
+    relationship_analysis,
+    health_analysis,
+    money_analysis,
+    travel_analysis,
+    remedies: relevantRemedies,
+    future_predictions,
     lo_shu: {
       grid,
       missing_numbers: missingNumbers,
@@ -176,6 +255,7 @@ router.post("/reports/generate", async (req, res) => {
       repeated_interpretations: repeatedInterps,
       arrow_interpretations: arrowInterps,
     },
+    interpretations,
     generated_at: new Date().toISOString(),
   });
 });

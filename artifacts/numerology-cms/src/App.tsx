@@ -11,6 +11,13 @@ import { FormulasPage } from "@/pages/formulas";
 import { KnowledgePage } from "@/pages/knowledge";
 import { LoShuPage } from "@/pages/lo-shu";
 import { ReportsPage } from "@/pages/reports";
+import { NumberMeaningsPage } from "@/pages/number-meanings";
+import { ProfessionsPage } from "@/pages/professions";
+import { RelationshipsPage } from "@/pages/relationships";
+import { HealthMappingsPage } from "@/pages/health-mappings";
+import { CompatibilityPage } from "@/pages/compatibility";
+import { RemediesPage } from "@/pages/remedies-page";
+import { TagsPage } from "@/pages/tags";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +31,13 @@ function Router() {
         <Route path="/knowledge" component={KnowledgePage} />
         <Route path="/lo-shu" component={LoShuPage} />
         <Route path="/reports" component={ReportsPage} />
+        <Route path="/number-meanings" component={NumberMeaningsPage} />
+        <Route path="/professions" component={ProfessionsPage} />
+        <Route path="/relationships" component={RelationshipsPage} />
+        <Route path="/health-mappings" component={HealthMappingsPage} />
+        <Route path="/compatibility" component={CompatibilityPage} />
+        <Route path="/remedies" component={RemediesPage} />
+        <Route path="/tags" component={TagsPage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

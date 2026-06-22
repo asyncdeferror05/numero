@@ -6,14 +6,28 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CalculatedNumbers } from './calculatedNumbers';
+import type { CareerSection } from './careerSection';
+import type { FuturePredictions } from './futurePredictions';
+import type { HealthSection } from './healthSection';
 import type { LoShuResult } from './loShuResult';
 import type { NumerologyReportSubject } from './numerologyReportSubject';
+import type { RelationshipSection } from './relationshipSection';
+import type { Remedy } from './remedy';
+import type { ReportSection } from './reportSection';
 import type { RuleInterpretation } from './ruleInterpretation';
 
 export interface NumerologyReport {
   subject: NumerologyReportSubject;
   numbers: CalculatedNumbers;
-  interpretations: RuleInterpretation[];
+  personality_analysis: ReportSection;
+  career_analysis: CareerSection;
+  relationship_analysis: RelationshipSection;
+  health_analysis: HealthSection;
+  money_analysis: ReportSection;
+  travel_analysis: ReportSection;
+  remedies: Remedy[];
+  future_predictions: FuturePredictions;
   lo_shu: LoShuResult;
+  interpretations: RuleInterpretation[];
   generated_at: string;
 }

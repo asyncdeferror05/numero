@@ -2,3 +2,8 @@ export * from "./rules";
 export * from "./formulas";
 export * from "./knowledge";
 export * from "./loshu";
+export * from "./number-meanings";
+export * from "./mappings";
+export * from "./compatibility";
+export * from "./remedies";
+export * from "./categories-tags";

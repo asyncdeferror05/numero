@@ -15,6 +15,7 @@ export interface DashboardStats {
   activeFormulas: number;
   totalKnowledgeEntries: number;
   totalLoShuRules: number;
+  totalNumberMeanings: number;
   rulesByType: RuleTypeCount[];
   recentRules: Rule[];
 }
