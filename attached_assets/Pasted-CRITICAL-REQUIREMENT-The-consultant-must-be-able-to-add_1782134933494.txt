@@ -1,0 +1,294 @@
+CRITICAL REQUIREMENT
+
+The consultant must be able to add, edit, remove, disable, and create new numerology rules without touching code.
+
+The system must function as a Numerology CMS.
+
+The consultant is not a programmer.
+
+All logic must be configurable from the admin panel.
+
+---
+
+RULE ENGINE
+
+Create a dynamic rule engine.
+
+Rules must come from the database.
+
+The application must never rely on hardcoded numerology interpretations.
+
+---
+
+RULE TYPES
+
+Support:
+
+* Personality Number Rules
+* Birthday Number Rules
+* Destiny Number Rules
+* Personal Year Rules
+* Personal Month Rules
+* Personal Day Rules
+* Lo Shu Rules
+* Missing Number Rules
+* Repeated Number Rules
+* Combination Rules
+* Compatibility Rules
+* Vehicle Number Rules
+* Phone Number Rules
+* House Number Rules
+* Remedy Rules
+* Custom Rules
+
+---
+
+RULE TABLE
+
+Create:
+
+Rule
+
+Fields:
+
+id
+name
+rule_type
+description
+condition_json
+result_json
+priority
+is_active
+created_at
+updated_at
+
+Example:
+
+Rule Name:
+Personal Year 5 Competition
+
+Rule Type:
+personal_year
+
+Condition:
+
+{
+"year": 5
+}
+
+Result:
+
+{
+"keywords": [
+"competition",
+"success",
+"change"
+]
+}
+
+---
+
+FORMULA ENGINE
+
+Create Formula table.
+
+Fields:
+
+id
+name
+formula_type
+formula_expression
+description
+is_active
+
+Examples:
+
+Birthday Number
+
+reduce(day)
+
+Destiny Number
+
+reduce(all_digits_of_dob)
+
+Personal Year
+
+reduce(
+birth_day +
+birth_month +
+current_year
+)
+
+The consultant can create new formulas from the admin panel.
+
+No code changes required.
+
+---
+
+RULE BUILDER
+
+Admin panel must contain:
+
+Create Rule
+
+Fields:
+
+Rule Name
+Rule Type
+Conditions
+Interpretations
+Keywords
+Strengths
+Weaknesses
+Recommendations
+
+Save
+
+---
+
+FORMULA BUILDER
+
+Admin can:
+
+Create Formula
+Edit Formula
+Deactivate Formula
+Duplicate Formula
+
+Examples:
+
+Custom Lo Shu Formula
+Custom Vehicle Number Formula
+Custom Phone Number Formula
+
+---
+
+KNOWLEDGE BASE
+
+Create dedicated section:
+
+Knowledge Base
+
+Categories:
+
+Personality Numbers
+Birthday Numbers
+Destiny Numbers
+Personal Years
+Lo Shu
+Compatibility
+Remedies
+Health
+Career
+Finance
+Relationships
+Custom
+
+Admin can search and edit entries.
+
+---
+
+LO SHU CMS
+
+Admin must be able to add:
+
+Missing Number Rules
+
+Example:
+
+Missing 1
+
+Strengths:
+[]
+
+Weaknesses:
+[
+"lack of confidence"
+]
+
+Recommendations:
+[
+"take initiative"
+]
+
+---
+
+Repeated Number Rules
+
+Example:
+
+Double 1
+
+Strengths:
+[
+"leadership"
+]
+
+Weaknesses:
+[
+"ego"
+]
+
+---
+
+Arrow Rules
+
+Arrow Name
+Numbers In Arrow
+Interpretation
+
+Example:
+
+Arrow of Determination
+
+Numbers:
+1,5,9
+
+Meaning:
+Strong determination.
+
+---
+
+REPORT GENERATOR
+
+When report is generated:
+
+The system must evaluate:
+
+1. Formulas
+2. Rules
+3. Lo Shu Conditions
+4. Personal Years
+5. Custom Rules
+
+Then build report dynamically.
+
+Nothing should be hardcoded.
+
+---
+
+FUTURE AI COMPATIBILITY
+
+Design database and APIs so an AI assistant can later read the same rules.
+
+The AI must never invent numerology interpretations.
+
+The AI must use stored rules.
+
+---
+
+ADMIN PERMISSIONS
+
+Single Admin Mode
+
+No authentication required initially.
+
+Later authentication can be added.
+
+---
+
+OBJECTIVE
+
+Build a consultant-controlled knowledge engine.
+
+The consultant should be able to modify the entire numerology system from the admin panel without changing code.

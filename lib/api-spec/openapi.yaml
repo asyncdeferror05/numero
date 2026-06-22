@@ -1,22 +1,33 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Numerology CMS API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: rules
+    description: Numerology rule management
+  - name: formulas
+    description: Formula management
+  - name: knowledge
+    description: Knowledge base management
+  - name: loshu
+    description: Lo Shu grid rule management
+  - name: reports
+    description: Report generation
+  - name: dashboard
+    description: Dashboard statistics
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +35,617 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Dashboard ─────────────────────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  # ─── Rules ──────────────────────────────────────────────────────────────────
+  /rules:
+    get:
+      operationId: listRules
+      tags: [rules]
+      summary: List all rules
+      parameters:
+        - name: rule_type
+          in: query
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Rules list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rule"
+    post:
+      operationId: createRule
+      tags: [rules]
+      summary: Create a rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rule"
+
+  /rules/{id}:
+    get:
+      operationId: getRule
+      tags: [rules]
+      summary: Get a rule by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rule"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateRule
+      tags: [rules]
+      summary: Update a rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rule"
+    delete:
+      operationId: deleteRule
+      tags: [rules]
+      summary: Delete a rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /rules/{id}/toggle:
+    patch:
+      operationId: toggleRule
+      tags: [rules]
+      summary: Toggle rule active status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rule"
+
+  /rules/types:
+    get:
+      operationId: listRuleTypes
+      tags: [rules]
+      summary: List available rule types
+      responses:
+        "200":
+          description: Rule types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  # ─── Formulas ────────────────────────────────────────────────────────────────
+  /formulas:
+    get:
+      operationId: listFormulas
+      tags: [formulas]
+      summary: List all formulas
+      parameters:
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Formulas list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Formula"
+    post:
+      operationId: createFormula
+      tags: [formulas]
+      summary: Create a formula
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FormulaInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Formula"
+
+  /formulas/{id}:
+    get:
+      operationId: getFormula
+      tags: [formulas]
+      summary: Get a formula by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Formula
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Formula"
+    patch:
+      operationId: updateFormula
+      tags: [formulas]
+      summary: Update a formula
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FormulaUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Formula"
+    delete:
+      operationId: deleteFormula
+      tags: [formulas]
+      summary: Delete a formula
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /formulas/{id}/duplicate:
+    post:
+      operationId: duplicateFormula
+      tags: [formulas]
+      summary: Duplicate a formula
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Duplicated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Formula"
+
+  /formulas/{id}/toggle:
+    patch:
+      operationId: toggleFormula
+      tags: [formulas]
+      summary: Toggle formula active status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Formula"
+
+  # ─── Knowledge Base ──────────────────────────────────────────────────────────
+  /knowledge-entries:
+    get:
+      operationId: listKnowledgeEntries
+      tags: [knowledge]
+      summary: List knowledge base entries
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Entries list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeEntry"
+    post:
+      operationId: createKnowledgeEntry
+      tags: [knowledge]
+      summary: Create a knowledge entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeEntryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeEntry"
+
+  /knowledge-entries/{id}:
+    get:
+      operationId: getKnowledgeEntry
+      tags: [knowledge]
+      summary: Get a knowledge entry by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeEntry"
+    patch:
+      operationId: updateKnowledgeEntry
+      tags: [knowledge]
+      summary: Update a knowledge entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeEntryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeEntry"
+    delete:
+      operationId: deleteKnowledgeEntry
+      tags: [knowledge]
+      summary: Delete a knowledge entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Lo Shu ──────────────────────────────────────────────────────────────────
+  /loshu/missing:
+    get:
+      operationId: listMissingNumberRules
+      tags: [loshu]
+      summary: List missing number rules
+      responses:
+        "200":
+          description: Missing number rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MissingNumberRule"
+    post:
+      operationId: createMissingNumberRule
+      tags: [loshu]
+      summary: Create a missing number rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MissingNumberRuleInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingNumberRule"
+
+  /loshu/missing/{id}:
+    patch:
+      operationId: updateMissingNumberRule
+      tags: [loshu]
+      summary: Update a missing number rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MissingNumberRuleUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingNumberRule"
+    delete:
+      operationId: deleteMissingNumberRule
+      tags: [loshu]
+      summary: Delete a missing number rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /loshu/repeated:
+    get:
+      operationId: listRepeatedNumberRules
+      tags: [loshu]
+      summary: List repeated number rules
+      responses:
+        "200":
+          description: Repeated number rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RepeatedNumberRule"
+    post:
+      operationId: createRepeatedNumberRule
+      tags: [loshu]
+      summary: Create a repeated number rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RepeatedNumberRuleInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepeatedNumberRule"
+
+  /loshu/repeated/{id}:
+    patch:
+      operationId: updateRepeatedNumberRule
+      tags: [loshu]
+      summary: Update a repeated number rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RepeatedNumberRuleUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepeatedNumberRule"
+    delete:
+      operationId: deleteRepeatedNumberRule
+      tags: [loshu]
+      summary: Delete a repeated number rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /loshu/arrows:
+    get:
+      operationId: listArrowRules
+      tags: [loshu]
+      summary: List Lo Shu arrow rules
+      responses:
+        "200":
+          description: Arrow rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArrowRule"
+    post:
+      operationId: createArrowRule
+      tags: [loshu]
+      summary: Create an arrow rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArrowRuleInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArrowRule"
+
+  /loshu/arrows/{id}:
+    patch:
+      operationId: updateArrowRule
+      tags: [loshu]
+      summary: Update an arrow rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArrowRuleUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArrowRule"
+    delete:
+      operationId: deleteArrowRule
+      tags: [loshu]
+      summary: Delete an arrow rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Reports ──────────────────────────────────────────────────────────────────
+  /reports/generate:
+    post:
+      operationId: generateReport
+      tags: [reports]
+      summary: Generate a numerology report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportRequest"
+      responses:
+        "200":
+          description: Generated report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NumerologyReport"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +656,637 @@ components:
       required:
         - status
 
+    DashboardStats:
+      type: object
+      properties:
+        totalRules:
+          type: integer
+        activeRules:
+          type: integer
+        totalFormulas:
+          type: integer
+        activeFormulas:
+          type: integer
+        totalKnowledgeEntries:
+          type: integer
+        totalLoShuRules:
+          type: integer
+        rulesByType:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleTypeCount"
+        recentRules:
+          type: array
+          items:
+            $ref: "#/components/schemas/Rule"
+      required:
+        - totalRules
+        - activeRules
+        - totalFormulas
+        - activeFormulas
+        - totalKnowledgeEntries
+        - totalLoShuRules
+        - rulesByType
+        - recentRules
+
+    RuleTypeCount:
+      type: object
+      properties:
+        type:
+          type: string
+        count:
+          type: integer
+      required:
+        - type
+        - count
+
+    Rule:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        rule_type:
+          type: string
+        description:
+          type: ["string", "null"]
+        condition_json:
+          type: object
+          additionalProperties: true
+        result_json:
+          type: object
+          additionalProperties: true
+        priority:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required:
+        - id
+        - name
+        - rule_type
+        - condition_json
+        - result_json
+        - priority
+        - is_active
+        - created_at
+        - updated_at
+
+    RuleInput:
+      type: object
+      properties:
+        name:
+          type: string
+        rule_type:
+          type: string
+        description:
+          type: string
+        condition_json:
+          type: object
+          additionalProperties: true
+        result_json:
+          type: object
+          additionalProperties: true
+        priority:
+          type: integer
+        is_active:
+          type: boolean
+      required:
+        - name
+        - rule_type
+        - condition_json
+        - result_json
+
+    RuleUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        rule_type:
+          type: string
+        description:
+          type: string
+        condition_json:
+          type: object
+          additionalProperties: true
+        result_json:
+          type: object
+          additionalProperties: true
+        priority:
+          type: integer
+        is_active:
+          type: boolean
+
+    Formula:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        formula_type:
+          type: string
+        formula_expression:
+          type: string
+        description:
+          type: ["string", "null"]
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required:
+        - id
+        - name
+        - formula_type
+        - formula_expression
+        - is_active
+        - created_at
+        - updated_at
+
+    FormulaInput:
+      type: object
+      properties:
+        name:
+          type: string
+        formula_type:
+          type: string
+        formula_expression:
+          type: string
+        description:
+          type: string
+        is_active:
+          type: boolean
+      required:
+        - name
+        - formula_type
+        - formula_expression
+
+    FormulaUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        formula_type:
+          type: string
+        formula_expression:
+          type: string
+        description:
+          type: string
+        is_active:
+          type: boolean
+
+    KnowledgeEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        is_published:
+          type: boolean
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required:
+        - id
+        - title
+        - category
+        - content
+        - tags
+        - is_published
+        - created_at
+        - updated_at
+
+    KnowledgeEntryInput:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        is_published:
+          type: boolean
+      required:
+        - title
+        - category
+        - content
+
+    KnowledgeEntryUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        is_published:
+          type: boolean
+
+    MissingNumberRule:
+      type: object
+      properties:
+        id:
+          type: integer
+        missing_number:
+          type: integer
+        title:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required:
+        - id
+        - missing_number
+        - title
+        - strengths
+        - weaknesses
+        - recommendations
+        - is_active
+        - created_at
+        - updated_at
+
+    MissingNumberRuleInput:
+      type: object
+      properties:
+        missing_number:
+          type: integer
+        title:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+      required:
+        - missing_number
+        - title
+        - strengths
+        - weaknesses
+        - recommendations
+
+    MissingNumberRuleUpdate:
+      type: object
+      properties:
+        missing_number:
+          type: integer
+        title:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+
+    RepeatedNumberRule:
+      type: object
+      properties:
+        id:
+          type: integer
+        number:
+          type: integer
+        count:
+          type: integer
+        title:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required:
+        - id
+        - number
+        - count
+        - title
+        - strengths
+        - weaknesses
+        - is_active
+        - created_at
+        - updated_at
+
+    RepeatedNumberRuleInput:
+      type: object
+      properties:
+        number:
+          type: integer
+        count:
+          type: integer
+        title:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+      required:
+        - number
+        - count
+        - title
+        - strengths
+        - weaknesses
+
+    RepeatedNumberRuleUpdate:
+      type: object
+      properties:
+        number:
+          type: integer
+        count:
+          type: integer
+        title:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+
+    ArrowRule:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        numbers:
+          type: array
+          items:
+            type: integer
+        interpretation:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required:
+        - id
+        - name
+        - numbers
+        - interpretation
+        - is_active
+        - created_at
+        - updated_at
+
+    ArrowRuleInput:
+      type: object
+      properties:
+        name:
+          type: string
+        numbers:
+          type: array
+          items:
+            type: integer
+        interpretation:
+          type: string
+        is_active:
+          type: boolean
+      required:
+        - name
+        - numbers
+        - interpretation
+
+    ArrowRuleUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        numbers:
+          type: array
+          items:
+            type: integer
+        interpretation:
+          type: string
+        is_active:
+          type: boolean
+
+    ReportRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        date_of_birth:
+          type: string
+          description: "ISO date string: YYYY-MM-DD"
+      required:
+        - name
+        - date_of_birth
+
+    NumerologyReport:
+      type: object
+      properties:
+        subject:
+          type: object
+          properties:
+            name:
+              type: string
+            date_of_birth:
+              type: string
+          required:
+            - name
+            - date_of_birth
+        numbers:
+          $ref: "#/components/schemas/CalculatedNumbers"
+        interpretations:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleInterpretation"
+        lo_shu:
+          $ref: "#/components/schemas/LoShuResult"
+        generated_at:
+          type: string
+      required:
+        - subject
+        - numbers
+        - interpretations
+        - lo_shu
+        - generated_at
+
+    CalculatedNumbers:
+      type: object
+      properties:
+        birthday_number:
+          type: integer
+        destiny_number:
+          type: integer
+        personality_number:
+          type: ["integer", "null"]
+        personal_year:
+          type: integer
+        personal_month:
+          type: integer
+        personal_day:
+          type: integer
+      required:
+        - birthday_number
+        - destiny_number
+        - personal_year
+        - personal_month
+        - personal_day
+
+    RuleInterpretation:
+      type: object
+      properties:
+        rule_id:
+          type: integer
+        rule_name:
+          type: string
+        rule_type:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        description:
+          type: ["string", "null"]
+      required:
+        - rule_id
+        - rule_name
+        - rule_type
+        - keywords
+        - strengths
+        - weaknesses
+        - recommendations
+
+    LoShuResult:
+      type: object
+      properties:
+        grid:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+        missing_numbers:
+          type: array
+          items:
+            type: integer
+        repeated_numbers:
+          type: array
+          items:
+            $ref: "#/components/schemas/RepeatedEntry"
+        active_arrows:
+          type: array
+          items:
+            type: string
+        missing_interpretations:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingNumberRule"
+        repeated_interpretations:
+          type: array
+          items:
+            $ref: "#/components/schemas/RepeatedNumberRule"
+        arrow_interpretations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArrowRule"
+      required:
+        - grid
+        - missing_numbers
+        - repeated_numbers
+        - active_arrows
+        - missing_interpretations
+        - repeated_interpretations
+        - arrow_interpretations
+
+    RepeatedEntry:
+      type: object
+      properties:
+        number:
+          type: integer
+        count:
+          type: integer
+      required:
+        - number
+        - count
