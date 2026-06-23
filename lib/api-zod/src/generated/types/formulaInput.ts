@@ -11,5 +11,6 @@ export interface FormulaInput {
   formula_type: string;
   formula_expression: string;
   description?: string;
+  version?: number;
   is_active?: boolean;
 }

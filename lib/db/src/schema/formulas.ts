@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -8,7 +8,8 @@ export const formulasTable = pgTable("formulas", {
   formula_type: text("formula_type").notNull(),
   formula_expression: text("formula_expression").notNull(),
   description: text("description"),
-  is_active: boolean("is_active").notNull().default(true),
+  version: integer("version").notNull().default(1),
+  is_active: boolean("is_active").notNull().default(false),
   created_at: timestamp("created_at").notNull().defaultNow(),
   updated_at: timestamp("updated_at").notNull().defaultNow(),
 });

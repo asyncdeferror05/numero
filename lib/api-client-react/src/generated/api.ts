@@ -28,7 +28,10 @@ import type {
   CompatibilityRuleUpdate,
   DashboardStats,
   Formula,
+  FormulaDslReference,
   FormulaInput,
+  FormulaTestInput,
+  FormulaTestResult,
   FormulaUpdate,
   HealthMapping,
   HealthMappingInput,
@@ -1146,7 +1149,7 @@ export const getDuplicateFormulaUrl = (id: number,) => {
 }
 
 /**
- * @summary Duplicate a formula
+ * @summary Clone a formula as a new version
  */
 export const duplicateFormula = async (id: number, options?: RequestInit): Promise<Formula> => {
 
@@ -1194,7 +1197,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DuplicateFormulaMutationError = ErrorType<unknown>
 
     /**
- * @summary Duplicate a formula
+ * @summary Clone a formula as a new version
  */
 export const useDuplicateFormula = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof duplicateFormula>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -1276,6 +1279,225 @@ export const useToggleFormula = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getToggleFormulaMutationOptions(options));
     }
+
+export const getActivateFormulaUrl = (id: number,) => {
+
+
+
+
+  return `/api/formulas/${id}/activate`
+}
+
+/**
+ * @summary Set this formula as the active version for its type (deactivates all others of same type)
+ */
+export const activateFormula = async (id: number, options?: RequestInit): Promise<Formula> => {
+
+  return customFetch<Formula>(getActivateFormulaUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getActivateFormulaMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateFormula>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof activateFormula>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['activateFormula'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activateFormula>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  activateFormula(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivateFormulaMutationResult = NonNullable<Awaited<ReturnType<typeof activateFormula>>>
+
+    export type ActivateFormulaMutationError = ErrorType<void>
+
+    /**
+ * @summary Set this formula as the active version for its type (deactivates all others of same type)
+ */
+export const useActivateFormula = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateFormula>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof activateFormula>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getActivateFormulaMutationOptions(options));
+    }
+
+export const getTestFormulaUrl = (id: number,) => {
+
+
+
+
+  return `/api/formulas/${id}/test`
+}
+
+/**
+ * @summary Test a formula expression with sample inputs
+ */
+export const testFormula = async (id: number,
+    formulaTestInput: FormulaTestInput, options?: RequestInit): Promise<FormulaTestResult> => {
+
+  return customFetch<FormulaTestResult>(getTestFormulaUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      formulaTestInput,)
+  }
+);}
+
+
+
+
+export const getTestFormulaMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testFormula>>, TError,{id: number;data: BodyType<FormulaTestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testFormula>>, TError,{id: number;data: BodyType<FormulaTestInput>}, TContext> => {
+
+const mutationKey = ['testFormula'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testFormula>>, {id: number;data: BodyType<FormulaTestInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  testFormula(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestFormulaMutationResult = NonNullable<Awaited<ReturnType<typeof testFormula>>>
+    export type TestFormulaMutationBody = BodyType<FormulaTestInput>
+    export type TestFormulaMutationError = ErrorType<void>
+
+    /**
+ * @summary Test a formula expression with sample inputs
+ */
+export const useTestFormula = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testFormula>>, TError,{id: number;data: BodyType<FormulaTestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof testFormula>>,
+        TError,
+        {id: number;data: BodyType<FormulaTestInput>},
+        TContext
+      > => {
+      return useMutation(getTestFormulaMutationOptions(options));
+    }
+
+export const getGetFormulaDslReferenceUrl = () => {
+
+
+
+
+  return `/api/formulas/dsl-reference`
+}
+
+/**
+ * @summary Get DSL reference — available variables, functions, and examples
+ */
+export const getFormulaDslReference = async ( options?: RequestInit): Promise<FormulaDslReference> => {
+
+  return customFetch<FormulaDslReference>(getGetFormulaDslReferenceUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFormulaDslReferenceQueryKey = () => {
+    return [
+    `/api/formulas/dsl-reference`
+    ] as const;
+    }
+
+
+export const getGetFormulaDslReferenceQueryOptions = <TData = Awaited<ReturnType<typeof getFormulaDslReference>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFormulaDslReference>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFormulaDslReferenceQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFormulaDslReference>>> = ({ signal }) => getFormulaDslReference({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFormulaDslReference>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFormulaDslReferenceQueryResult = NonNullable<Awaited<ReturnType<typeof getFormulaDslReference>>>
+export type GetFormulaDslReferenceQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get DSL reference — available variables, functions, and examples
+ */
+
+export function useGetFormulaDslReference<TData = Awaited<ReturnType<typeof getFormulaDslReference>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFormulaDslReference>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFormulaDslReferenceQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListKnowledgeEntriesUrl = (params?: ListKnowledgeEntriesParams,) => {
   const normalizedParams = new URLSearchParams();

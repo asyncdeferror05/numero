@@ -13,6 +13,7 @@ export interface Formula {
   formula_expression: string;
   /** @nullable */
   description?: string | null;
+  version: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;

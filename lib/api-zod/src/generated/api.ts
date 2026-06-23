@@ -185,6 +185,7 @@ export const ListFormulasResponseItem = zod.object({
   "formula_type": zod.string(),
   "formula_expression": zod.string(),
   "description": zod.string().nullish(),
+  "version": zod.number(),
   "is_active": zod.boolean(),
   "created_at": zod.string(),
   "updated_at": zod.string()
@@ -200,6 +201,7 @@ export const CreateFormulaBody = zod.object({
   "formula_type": zod.string(),
   "formula_expression": zod.string(),
   "description": zod.string().optional(),
+  "version": zod.number().optional(),
   "is_active": zod.boolean().optional()
 })
 
@@ -217,6 +219,7 @@ export const GetFormulaResponse = zod.object({
   "formula_type": zod.string(),
   "formula_expression": zod.string(),
   "description": zod.string().nullish(),
+  "version": zod.number(),
   "is_active": zod.boolean(),
   "created_at": zod.string(),
   "updated_at": zod.string()
@@ -235,6 +238,7 @@ export const UpdateFormulaBody = zod.object({
   "formula_type": zod.string().optional(),
   "formula_expression": zod.string().optional(),
   "description": zod.string().optional(),
+  "version": zod.number().optional(),
   "is_active": zod.boolean().optional()
 })
 
@@ -244,6 +248,7 @@ export const UpdateFormulaResponse = zod.object({
   "formula_type": zod.string(),
   "formula_expression": zod.string(),
   "description": zod.string().nullish(),
+  "version": zod.number(),
   "is_active": zod.boolean(),
   "created_at": zod.string(),
   "updated_at": zod.string()
@@ -259,7 +264,7 @@ export const DeleteFormulaParams = zod.object({
 
 
 /**
- * @summary Duplicate a formula
+ * @summary Clone a formula as a new version
  */
 export const DuplicateFormulaParams = zod.object({
   "id": zod.coerce.number()
@@ -279,9 +284,72 @@ export const ToggleFormulaResponse = zod.object({
   "formula_type": zod.string(),
   "formula_expression": zod.string(),
   "description": zod.string().nullish(),
+  "version": zod.number(),
   "is_active": zod.boolean(),
   "created_at": zod.string(),
   "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Set this formula as the active version for its type (deactivates all others of same type)
+ */
+export const ActivateFormulaParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ActivateFormulaResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "formula_type": zod.string(),
+  "formula_expression": zod.string(),
+  "description": zod.string().nullish(),
+  "version": zod.number(),
+  "is_active": zod.boolean(),
+  "created_at": zod.string(),
+  "updated_at": zod.string()
+})
+
+
+/**
+ * @summary Test a formula expression with sample inputs
+ */
+export const TestFormulaParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const TestFormulaBody = zod.object({
+  "day": zod.number().optional(),
+  "month": zod.number().optional(),
+  "year": zod.number().optional(),
+  "name": zod.string().optional(),
+  "extra_input": zod.string().optional()
+})
+
+export const TestFormulaResponse = zod.object({
+  "result": zod.number().nullish(),
+  "error": zod.string().optional(),
+  "expression": zod.string(),
+  "formula_name": zod.string()
+})
+
+
+/**
+ * @summary Get DSL reference — available variables, functions, and examples
+ */
+export const GetFormulaDslReferenceResponse = zod.object({
+  "variables": zod.array(zod.object({
+  "name": zod.string(),
+  "description": zod.string()
+})),
+  "functions": zod.array(zod.object({
+  "name": zod.string(),
+  "description": zod.string()
+})),
+  "examples": zod.array(zod.object({
+  "label": zod.string(),
+  "expression": zod.string()
+}))
 })
 
 

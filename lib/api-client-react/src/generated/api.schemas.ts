@@ -79,6 +79,7 @@ export interface Formula {
   formula_expression: string;
   /** @nullable */
   description?: string | null;
+  version: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -89,6 +90,7 @@ export interface FormulaInput {
   formula_type: string;
   formula_expression: string;
   description?: string;
+  version?: number;
   is_active?: boolean;
 }
 
@@ -97,7 +99,40 @@ export interface FormulaUpdate {
   formula_type?: string;
   formula_expression?: string;
   description?: string;
+  version?: number;
   is_active?: boolean;
+}
+
+export interface FormulaTestInput {
+  day?: number;
+  month?: number;
+  year?: number;
+  name?: string;
+  extra_input?: string;
+}
+
+export interface FormulaTestResult {
+  /** @nullable */
+  result?: number | null;
+  error?: string;
+  expression: string;
+  formula_name: string;
+}
+
+export interface FormulaDslReferenceItem {
+  name: string;
+  description: string;
+}
+
+export interface FormulaDslExample {
+  label: string;
+  expression: string;
+}
+
+export interface FormulaDslReference {
+  variables: FormulaDslReferenceItem[];
+  functions: FormulaDslReferenceItem[];
+  examples: FormulaDslExample[];
 }
 
 export interface KnowledgeEntry {

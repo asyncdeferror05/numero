@@ -285,7 +285,7 @@ paths:
     post:
       operationId: duplicateFormula
       tags: [formulas]
-      summary: Duplicate a formula
+      summary: Clone a formula as a new version
       parameters:
         - name: id
           in: path
@@ -294,7 +294,7 @@ paths:
             type: integer
       responses:
         "201":
-          description: Duplicated
+          description: Cloned
           content:
             application/json:
               schema:
@@ -318,6 +318,67 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Formula"
+
+  /formulas/{id}/activate:
+    post:
+      operationId: activateFormula
+      tags: [formulas]
+      summary: Set this formula as the active version for its type (deactivates all others of same type)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Formula"
+        "404":
+          description: Not found
+
+  /formulas/{id}/test:
+    post:
+      operationId: testFormula
+      tags: [formulas]
+      summary: Test a formula expression with sample inputs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FormulaTestInput"
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FormulaTestResult"
+        "404":
+          description: Not found
+
+  /formulas/dsl-reference:
+    get:
+      operationId: getFormulaDslReference
+      tags: [formulas]
+      summary: Get DSL reference — available variables, functions, and examples
+      responses:
+        "200":
+          description: DSL reference
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FormulaDslReference"
 
   # ─── Knowledge Base ───────────────────────────────────────────────────────────
   /knowledge-entries:
@@ -1333,10 +1394,11 @@ components:
         formula_type: { type: string }
         formula_expression: { type: string }
         description: { type: ["string", "null"] }
+        version: { type: integer }
         is_active: { type: boolean }
         created_at: { type: string }
         updated_at: { type: string }
-      required: [id, name, formula_type, formula_expression, is_active, created_at, updated_at]
+      required: [id, name, formula_type, formula_expression, version, is_active, created_at, updated_at]
 
     FormulaInput:
       type: object
@@ -1345,6 +1407,7 @@ components:
         formula_type: { type: string }
         formula_expression: { type: string }
         description: { type: string }
+        version: { type: integer }
         is_active: { type: boolean }
       required: [name, formula_type, formula_expression]
 
@@ -1355,7 +1418,54 @@ components:
         formula_type: { type: string }
         formula_expression: { type: string }
         description: { type: string }
+        version: { type: integer }
         is_active: { type: boolean }
+
+    FormulaTestInput:
+      type: object
+      properties:
+        day: { type: integer }
+        month: { type: integer }
+        year: { type: integer }
+        name: { type: string }
+        extra_input: { type: string }
+
+    FormulaTestResult:
+      type: object
+      properties:
+        result: { type: ["integer", "null"] }
+        error: { type: string }
+        expression: { type: string }
+        formula_name: { type: string }
+      required: [expression, formula_name]
+
+    FormulaDslReferenceItem:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+      required: [name, description]
+
+    FormulaDslExample:
+      type: object
+      properties:
+        label: { type: string }
+        expression: { type: string }
+      required: [label, expression]
+
+    FormulaDslReference:
+      type: object
+      properties:
+        variables:
+          type: array
+          items: { $ref: "#/components/schemas/FormulaDslReferenceItem" }
+        functions:
+          type: array
+          items: { $ref: "#/components/schemas/FormulaDslReferenceItem" }
+        examples:
+          type: array
+          items: { $ref: "#/components/schemas/FormulaDslExample" }
+      required: [variables, functions, examples]
 
     KnowledgeEntry:
       type: object
