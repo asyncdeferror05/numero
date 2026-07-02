@@ -26,7 +26,8 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TagInput } from "@/components/tag-input";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
   "Personality Numbers", "Birthday Numbers", "Destiny Numbers", "Personal Years",
@@ -153,6 +154,7 @@ export function KnowledgePage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<KnowledgeEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<KnowledgeEntry | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const { data: entries, isLoading } = useListKnowledgeEntries({ search: search || undefined, category: category || undefined });
   const deleteMutation = useDeleteKnowledgeEntry();
@@ -210,38 +212,67 @@ export function KnowledgePage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {entries!.map((entry) => (
-            <Card key={entry.id} data-testid={`entry-card-${entry.id}`}>
-              <CardContent className="py-4 px-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-foreground">{entry.title}</span>
-                      <Badge variant="outline" className="text-xs">{entry.category}</Badge>
-                      {entry.is_published && <Badge className="text-xs bg-green-500/15 text-green-400 border-green-500/20">Published</Badge>}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{entry.content}</p>
-                    {entry.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {entry.tags.map((tag, i) => (
-                          <span key={i} className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{tag}</span>
-                        ))}
+        <div className="space-y-2">
+          {entries!.map((entry) => {
+            const isOpen = expandedId === entry.id;
+            return (
+              <Card key={entry.id} data-testid={`entry-card-${entry.id}`} className={cn("border-border transition-colors", isOpen && "border-primary/30")}>
+                <CardContent className="p-0">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setExpandedId(isOpen ? null : entry.id)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isOpen ? null : entry.id); } }}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 cursor-pointer select-none transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-foreground text-sm">{entry.title}</span>
+                        <Badge variant="outline" className="text-xs">{entry.category}</Badge>
+                        {entry.is_published && <Badge className="text-xs bg-green-500/15 text-green-400 border-green-500/20">Published</Badge>}
                       </div>
-                    )}
+                      {!isOpen && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{entry.content}</p>}
+                      {entry.tags.length > 0 && !isOpen && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {entry.tags.slice(0, 4).map((tag, i) => (
+                            <span key={i} className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{tag}</span>
+                          ))}
+                          {entry.tags.length > 4 && <span className="text-xs text-muted-foreground">+{entry.tags.length - 4}</span>}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <Button size="icon" variant="ghost" onClick={() => { setEditEntry(entry); setDialogOpen(true); }} data-testid={`button-edit-entry-${entry.id}`}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(entry)} data-testid={`button-delete-entry-${entry.id}`}>
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <ChevronRight className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", isOpen && "rotate-90")} />
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button size="icon" variant="ghost" onClick={() => { setEditEntry(entry); setDialogOpen(true); }} data-testid={`button-edit-entry-${entry.id}`}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(entry)} data-testid={`button-delete-entry-${entry.id}`}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  {isOpen && (
+                    <div className="px-5 pb-4 pt-3 border-t border-border/50 space-y-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Content</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+                      </div>
+                      {entry.tags.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Tags</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {entry.tags.map((tag, i) => (
+                              <span key={i} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">{tag}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

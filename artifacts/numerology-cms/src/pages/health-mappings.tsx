@@ -13,13 +13,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const SEVERITIES = ["mild", "moderate", "strong"];
 const SEVERITY_COLORS: Record<string, string> = {
@@ -79,7 +79,7 @@ function HealthDialog({ open, item, onClose }: { open: boolean; item: HealthMapp
               <FormItem><FormLabel>Health Area</FormLabel><FormControl><Input placeholder="e.g. Heart, Blood Pressure…" {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="notes" render={({ field }) => (
-              <FormItem><FormLabel>Notes</FormLabel><FormControl><Textarea rows={2} {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Notes</FormLabel><FormControl><Textarea rows={3} {...field} /></FormControl></FormItem>
             )} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -95,6 +95,7 @@ function HealthDialog({ open, item, onClose }: { open: boolean; item: HealthMapp
 export function HealthMappingsPage() {
   const [dialogItem, setDialogItem] = useState<HealthMapping | null | "new">(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
   const { data = [], isLoading } = useListHealthMappings({});
@@ -106,6 +107,12 @@ export function HealthMappingsPage() {
     toast({ title: "Deleted" });
     qc.invalidateQueries({ queryKey: getListHealthMappingsQueryKey() });
     setDeleteId(null);
+  }
+
+  const grouped: Record<number, HealthMapping[]> = {};
+  for (const m of data) {
+    if (!grouped[m.number]) grouped[m.number] = [];
+    grouped[m.number].push(m);
   }
 
   return (
@@ -122,24 +129,60 @@ export function HealthMappingsPage() {
         <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
       ) : (
         <div className="space-y-2">
-          {data.map((m) => (
-            <Card key={m.id} className="group border-border hover:border-primary/30 transition-colors">
-              <CardContent className="p-4 flex items-start gap-4">
-                <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">{m.number}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-medium">{m.health_area}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${SEVERITY_COLORS[m.severity] ?? ""}`}>{m.severity}</span>
+          {data.map((m) => {
+            const isOpen = expandedId === m.id;
+            return (
+              <Card key={m.id} className={cn("border-border transition-colors", isOpen && "border-primary/30")}>
+                <CardContent className="p-0">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setExpandedId(isOpen ? null : m.id)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isOpen ? null : m.id); } }}
+                    className="flex items-center gap-4 px-4 py-3 hover:bg-muted/30 cursor-pointer select-none transition-colors"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">{m.number}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{m.health_area}</span>
+                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0", SEVERITY_COLORS[m.severity] ?? "")}>{m.severity}</span>
+                      </div>
+                      {m.notes && !isOpen && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{m.notes}</p>}
+                    </div>
+                    <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(m)}><Pencil className="w-3 h-3" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(m.id)}><Trash2 className="w-3 h-3" /></Button>
+                    </div>
+                    <ChevronRight className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", isOpen && "rotate-90")} />
                   </div>
-                  {m.notes && <p className="text-xs text-muted-foreground">{m.notes}</p>}
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(m)}><Pencil className="w-3 h-3" /></Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(m.id)}><Trash2 className="w-3 h-3" /></Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  {isOpen && (
+                    <div className="px-4 pb-4 pt-3 border-t border-border/50 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">Number</p>
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">{m.number}</div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">Severity</p>
+                          <span className={cn("text-xs px-2.5 py-1 rounded-full font-medium", SEVERITY_COLORS[m.severity] ?? "")}>{m.severity}</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">Health Area</p>
+                          <p className="text-sm font-medium">{m.health_area}</p>
+                        </div>
+                      </div>
+                      {m.notes && (
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">Notes</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{m.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
           {data.length === 0 && <div className="text-center py-16 text-muted-foreground text-sm">No health mappings yet.</div>}
         </div>
       )}

@@ -18,6 +18,7 @@ import { HealthMappingsPage } from "@/pages/health-mappings";
 import { CompatibilityPage } from "@/pages/compatibility";
 import { RemediesPage } from "@/pages/remedies-page";
 import { TagsPage } from "@/pages/tags";
+import { CustomSectionPage } from "@/pages/custom-section";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ function Router() {
         <Route path="/compatibility" component={CompatibilityPage} />
         <Route path="/remedies" component={RemediesPage} />
         <Route path="/tags" component={TagsPage} />
+        <Route path="/custom/:id" component={CustomSectionPage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

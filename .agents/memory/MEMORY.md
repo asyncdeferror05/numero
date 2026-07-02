@@ -1,0 +1,2 @@
+- [CMS Expandable Card Pattern](cms-expandable-cards.md) — inline expand state per page using `expandedId` + `div[role="button"]` + ChevronRight; never nest `<button>` inside the clickable wrapper.
+- [CMS Custom Sidebar Sections](cms-custom-sidebar.md) — localStorage-based custom nav under extensible groups; items link to `/custom/:id`; notes persisted per-section.

@@ -17,12 +17,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 function scoreColor(score: number): string {
   if (score >= 8) return "text-emerald-400";
   if (score >= 5) return "text-amber-400";
   return "text-red-400";
+}
+
+function scoreBg(score: number): string {
+  if (score >= 8) return "bg-emerald-500/15 text-emerald-400";
+  if (score >= 5) return "bg-amber-500/15 text-amber-400";
+  return "bg-red-500/15 text-red-400";
 }
 
 const schema = z.object({
@@ -71,7 +78,7 @@ function CompatDialog({ open, item, onClose }: { open: boolean; item: Compatibil
               )} />
             </div>
             <FormField control={form.control} name="interpretation" render={({ field }) => (
-              <FormItem><FormLabel>Interpretation</FormLabel><FormControl><Textarea rows={3} placeholder="Describe the dynamic between these numbers…" {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Interpretation</FormLabel><FormControl><Textarea rows={4} placeholder="Describe the dynamic between these numbers…" {...field} /></FormControl></FormItem>
             )} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -87,6 +94,7 @@ function CompatDialog({ open, item, onClose }: { open: boolean; item: Compatibil
 export function CompatibilityPage() {
   const [dialogItem, setDialogItem] = useState<CompatibilityRule | null | "new">(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
   const { data = [], isLoading } = useListCompatibilityRules({});
@@ -114,23 +122,61 @@ export function CompatibilityPage() {
         <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
       ) : (
         <div className="space-y-2">
-          {data.sort((a, b) => a.number_a - b.number_a || a.number_b - b.number_b).map((r) => (
-            <Card key={r.id} className="group border-border hover:border-primary/30 transition-colors">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">{r.number_a}</div>
-                  <span className="text-muted-foreground text-sm">×</span>
-                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">{r.number_b}</div>
-                </div>
-                <div className={`text-2xl font-bold w-10 text-center shrink-0 ${scoreColor(r.compatibility_score)}`}>{r.compatibility_score}</div>
-                <p className="text-sm text-muted-foreground flex-1 min-w-0 line-clamp-2">{r.interpretation || "No interpretation yet"}</p>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(r)}><Pencil className="w-3 h-3" /></Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(r.id)}><Trash2 className="w-3 h-3" /></Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {data.sort((a, b) => a.number_a - b.number_a || a.number_b - b.number_b).map((r) => {
+            const isOpen = expandedId === r.id;
+            return (
+              <Card key={r.id} className={cn("border-border transition-colors", isOpen && "border-primary/30")}>
+                <CardContent className="p-0">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setExpandedId(isOpen ? null : r.id)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isOpen ? null : r.id); } }}
+                    className="flex items-center gap-4 px-4 py-3 hover:bg-muted/30 cursor-pointer select-none transition-colors"
+                  >
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">{r.number_a}</div>
+                      <span className="text-muted-foreground text-sm">×</span>
+                      <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">{r.number_b}</div>
+                    </div>
+                    <div className={cn("text-xl font-bold w-8 text-center shrink-0 px-2 py-0.5 rounded", scoreBg(r.compatibility_score))}>{r.compatibility_score}</div>
+                    <p className="text-sm text-muted-foreground flex-1 min-w-0 line-clamp-1">{r.interpretation || <span className="italic">No interpretation yet</span>}</p>
+                    <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(r)}><Pencil className="w-3 h-3" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(r.id)}><Trash2 className="w-3 h-3" /></Button>
+                    </div>
+                    <ChevronRight className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", isOpen && "rotate-90")} />
+                  </div>
+                  {isOpen && (
+                    <div className="px-4 pb-4 pt-3 border-t border-border/50 space-y-3">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">Numbers</p>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">{r.number_a}</div>
+                            <span className="text-muted-foreground">×</span>
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">{r.number_b}</div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">Score</p>
+                          <div className={cn("text-2xl font-bold", scoreColor(r.compatibility_score))}>{r.compatibility_score}<span className="text-xs text-muted-foreground font-normal">/10</span></div>
+                        </div>
+                      </div>
+                      {r.interpretation ? (
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Interpretation</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{r.interpretation}</p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">No interpretation written yet.</p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
           {data.length === 0 && <div className="text-center py-16 text-muted-foreground text-sm">No compatibility rules yet.</div>}
         </div>
       )}

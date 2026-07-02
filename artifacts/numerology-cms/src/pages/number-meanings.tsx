@@ -20,7 +20,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TagInput } from "@/components/tag-input";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const NUMBER_TYPES = ["personality", "birthday", "destiny", "personal_year", "personal_month", "personal_day", "vehicle", "phone", "house"];
 
@@ -125,6 +126,7 @@ export function NumberMeaningsPage() {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [dialogItem, setDialogItem] = useState<NumberMeaning | null | "new">(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
 
@@ -171,32 +173,82 @@ export function NumberMeaningsPage() {
           {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([type, items]) => (
             <div key={type}>
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 px-1">{type}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {items.sort((a, b) => a.number - b.number).map((m) => (
-                  <Card key={m.id} className="group border-border hover:border-primary/40 transition-colors">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-2xl font-bold text-primary">{m.number}</span>
-                            <span className="text-sm font-medium text-foreground truncate">{m.title}</span>
+              <div className="space-y-2">
+                {items.sort((a, b) => a.number - b.number).map((m) => {
+                  const isOpen = expandedId === m.id;
+                  return (
+                    <Card key={m.id} className={cn("border-border transition-colors", isOpen && "border-primary/30")}>
+                      <CardContent className="p-0">
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setExpandedId(isOpen ? null : m.id)}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isOpen ? null : m.id); } }}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 cursor-pointer select-none transition-colors"
+                        >
+                          <span className="text-2xl font-bold text-primary w-8 shrink-0">{m.number}</span>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-medium text-foreground">{m.title}</span>
+                            {m.description && !isOpen && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{m.description}</p>}
+                            {m.keywords_json.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {m.keywords_json.slice(0, 4).map((k) => <Badge key={k} variant="secondary" className="text-[10px]">{k}</Badge>)}
+                                {m.keywords_json.length > 4 && <Badge variant="outline" className="text-[10px]">+{m.keywords_json.length - 4}</Badge>}
+                              </div>
+                            )}
                           </div>
-                          {m.description && <p className="text-xs text-muted-foreground line-clamp-2">{m.description}</p>}
-                          {m.keywords_json.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {m.keywords_json.slice(0, 3).map((k) => <Badge key={k} variant="secondary" className="text-[10px]">{k}</Badge>)}
-                              {m.keywords_json.length > 3 && <Badge variant="outline" className="text-[10px]">+{m.keywords_json.length - 3}</Badge>}
-                            </div>
-                          )}
+                          <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(m)}><Pencil className="w-3 h-3" /></Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(m.id)}><Trash2 className="w-3 h-3" /></Button>
+                          </div>
+                          <ChevronRight className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", isOpen && "rotate-90")} />
                         </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(m)}><Pencil className="w-3 h-3" /></Button>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(m.id)}><Trash2 className="w-3 h-3" /></Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        {isOpen && (
+                          <div className="px-4 pb-4 pt-3 border-t border-border/50 space-y-3">
+                            {m.description && (
+                              <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">Description</p>
+                                <p className="text-sm text-muted-foreground leading-relaxed">{m.description}</p>
+                              </div>
+                            )}
+                            {m.keywords_json.length > 0 && (
+                              <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Keywords</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {m.keywords_json.map((k, i) => <span key={i} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">{k}</span>)}
+                                </div>
+                              </div>
+                            )}
+                            {(m.strengths_json ?? []).length > 0 && (
+                              <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Strengths</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {(m.strengths_json ?? []).map((s, i) => <span key={i} className="text-xs bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full">{s}</span>)}
+                                </div>
+                              </div>
+                            )}
+                            {(m.weaknesses_json ?? []).length > 0 && (
+                              <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Weaknesses</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {(m.weaknesses_json ?? []).map((w, i) => <span key={i} className="text-xs bg-red-500/15 text-red-400 px-2 py-0.5 rounded-full">{w}</span>)}
+                                </div>
+                              </div>
+                            )}
+                            {(m.recommendations_json ?? []).length > 0 && (
+                              <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Recommendations</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {(m.recommendations_json ?? []).map((r, i) => <span key={i} className="text-xs bg-blue-500/15 text-blue-400 px-2 py-0.5 rounded-full">{r}</span>)}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           ))}

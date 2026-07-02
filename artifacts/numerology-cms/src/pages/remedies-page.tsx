@@ -13,13 +13,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, Sparkles, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const CATEGORIES = ["health", "career", "finance", "relationship", "spiritual"];
 const CAT_COLORS: Record<string, string> = {
@@ -75,7 +75,7 @@ function RemedyDialog({ open, item, onClose }: { open: boolean; item: Remedy | n
               </FormItem>
             )} />
             <FormField control={form.control} name="description" render={({ field }) => (
-              <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea rows={3} {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea rows={4} {...field} /></FormControl></FormItem>
             )} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -92,6 +92,7 @@ export function RemediesPage() {
   const [catFilter, setCatFilter] = useState<string>("");
   const [dialogItem, setDialogItem] = useState<Remedy | null | "new">(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
   const params = catFilter ? { category: catFilter } : {};
@@ -124,28 +125,49 @@ export function RemediesPage() {
       {isLoading ? (
         <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {data.map((r) => (
-            <Card key={r.id} className="group border-border hover:border-primary/30 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span className="text-sm font-medium truncate">{r.title}</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${CAT_COLORS[r.category] ?? "bg-secondary text-secondary-foreground"}`}>{r.category}</span>
+        <div className="space-y-2">
+          {data.map((r) => {
+            const isOpen = expandedId === r.id;
+            return (
+              <Card key={r.id} className={cn("border-border transition-colors", isOpen && "border-primary/30")}>
+                <CardContent className="p-0">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setExpandedId(isOpen ? null : r.id)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isOpen ? null : r.id); } }}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 cursor-pointer select-none transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium">{r.title}</span>
+                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full shrink-0", CAT_COLORS[r.category] ?? "bg-secondary text-secondary-foreground")}>{r.category}</span>
+                      </div>
+                      {r.description && !isOpen && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{r.description}</p>
+                      )}
                     </div>
-                    {r.description && <p className="text-xs text-muted-foreground line-clamp-2">{r.description}</p>}
+                    <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(r)}><Pencil className="w-3 h-3" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(r.id)}><Trash2 className="w-3 h-3" /></Button>
+                    </div>
+                    <ChevronRight className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", isOpen && "rotate-90")} />
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(r)}><Pencil className="w-3 h-3" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(r.id)}><Trash2 className="w-3 h-3" /></Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {data.length === 0 && <div className="col-span-2 text-center py-16 text-muted-foreground text-sm">No remedies yet.</div>}
+                  {isOpen && (
+                    <div className="px-4 pb-4 pt-3 border-t border-border/50">
+                      {r.description ? (
+                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{r.description}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">No description provided.</p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+          {data.length === 0 && <div className="text-center py-16 text-muted-foreground text-sm">No remedies yet.</div>}
         </div>
       )}
 

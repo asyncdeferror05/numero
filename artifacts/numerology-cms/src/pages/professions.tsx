@@ -16,7 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const schema = z.object({
   number: z.coerce.number().int().min(1).max(9),
@@ -76,6 +77,7 @@ function ProfessionDialog({ open, item, onClose }: { open: boolean; item: Profes
 export function ProfessionsPage() {
   const [dialogItem, setDialogItem] = useState<ProfessionMapping | null | "new">(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [expandedNum, setExpandedNum] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
   const { data = [], isLoading } = useListProfessionMappings({});
@@ -108,26 +110,54 @@ export function ProfessionsPage() {
       {isLoading ? (
         <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {[1,2,3,4,5,6,7,8,9].map((n) => {
             const items = grouped[n] ?? [];
+            const isOpen = expandedNum === n;
             return (
-              <Card key={n} className="border-border">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">{n}</div>
-                    <span className="font-medium">{items.length === 0 ? <span className="text-muted-foreground text-sm">No professions yet</span> : `${items.length} profession${items.length > 1 ? "s" : ""}`}</span>
+              <Card key={n} className={cn("border-border transition-colors", isOpen && "border-primary/30")}>
+                <CardContent className="p-0">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setExpandedNum(isOpen ? null : n)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedNum(isOpen ? null : n); } }}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 cursor-pointer select-none transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm shrink-0">{n}</div>
+                    <div className="flex-1 min-w-0">
+                      {items.length === 0 ? (
+                        <span className="text-sm text-muted-foreground">No professions yet</span>
+                      ) : (
+                        <div>
+                          <span className="text-sm font-medium">{items.length} profession{items.length > 1 ? "s" : ""}</span>
+                          {!isOpen && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {items.slice(0, 4).map((p) => (
+                                <span key={p.id} className="text-xs bg-secondary px-2 py-0.5 rounded text-muted-foreground">{p.profession}</span>
+                              ))}
+                              {items.length > 4 && <span className="text-xs text-muted-foreground">+{items.length - 4} more</span>}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <ChevronRight className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", isOpen && "rotate-90")} />
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {items.sort((a, b) => b.weight - a.weight).map((p) => (
-                      <div key={p.id} className="group flex items-center gap-1.5 bg-secondary rounded-md px-2.5 py-1 text-sm">
-                        <span>{p.profession}</span>
-                        {p.weight !== 1 && <span className="text-[10px] text-muted-foreground">({p.weight})</span>}
-                        <Button size="icon" variant="ghost" className="h-4 w-4 opacity-0 group-hover:opacity-100 ml-0.5" onClick={() => setDialogItem(p)}><Pencil className="w-2.5 h-2.5" /></Button>
-                        <Button size="icon" variant="ghost" className="h-4 w-4 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive" onClick={() => setDeleteId(p.id)}><Trash2 className="w-2.5 h-2.5" /></Button>
+                  {isOpen && items.length > 0 && (
+                    <div className="px-4 pb-4 pt-3 border-t border-border/50">
+                      <div className="flex flex-wrap gap-2">
+                        {items.sort((a, b) => b.weight - a.weight).map((p) => (
+                          <div key={p.id} className="group flex items-center gap-1.5 bg-secondary rounded-md px-2.5 py-1 text-sm">
+                            <span>{p.profession}</span>
+                            {p.weight !== 1 && <span className="text-[10px] text-muted-foreground">({p.weight})</span>}
+                            <Button size="icon" variant="ghost" className="h-4 w-4 opacity-0 group-hover:opacity-100 ml-0.5" onClick={(e) => { e.stopPropagation(); setDialogItem(p); }}><Pencil className="w-2.5 h-2.5" /></Button>
+                            <Button size="icon" variant="ghost" className="h-4 w-4 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(p.id); }}><Trash2 className="w-2.5 h-2.5" /></Button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

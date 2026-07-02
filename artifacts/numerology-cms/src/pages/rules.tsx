@@ -27,7 +27,8 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TagInput } from "@/components/tag-input";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const RULE_TYPES = [
   "personality_number", "birthday_number", "destiny_number", "personal_year",
@@ -36,8 +37,8 @@ const RULE_TYPES = [
   "remedy", "custom",
 ];
 
-function parseJsonField(val: string): object {
-  try { return JSON.parse(val); } catch { return {}; }
+function parseJsonField(val: string): Record<string, unknown> {
+  try { return JSON.parse(val) as Record<string, unknown>; } catch { return {}; }
 }
 
 const ruleSchema = z.object({
@@ -227,6 +228,7 @@ export function RulesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editRule, setEditRule] = useState<Rule | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Rule | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const { data: rules, isLoading } = useListRules({
     search: search || undefined,
@@ -298,10 +300,20 @@ export function RulesPage() {
           {rules!.map((rule) => {
             const result = rule.result_json as Record<string, string[]>;
             const keywords: string[] = result?.keywords ?? [];
+            const strengths: string[] = result?.strengths ?? [];
+            const weaknesses: string[] = result?.weaknesses ?? [];
+            const recommendations: string[] = result?.recommendations ?? [];
+            const isOpen = expandedId === rule.id;
             return (
-              <Card key={rule.id} data-testid={`rule-card-${rule.id}`}>
-                <CardContent className="py-3 px-5">
-                  <div className="flex items-start justify-between gap-4">
+              <Card key={rule.id} data-testid={`rule-card-${rule.id}`} className={cn("border-border transition-colors", isOpen && "border-primary/30")}>
+                <CardContent className="p-0">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setExpandedId(isOpen ? null : rule.id)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isOpen ? null : rule.id); } }}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 cursor-pointer select-none transition-colors"
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-foreground text-sm">{rule.name}</span>
@@ -310,7 +322,7 @@ export function RulesPage() {
                         {!rule.is_active && <Badge variant="destructive" className="text-xs">Inactive</Badge>}
                       </div>
                       {rule.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{rule.description}</p>
                       )}
                       {keywords.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1.5">
@@ -321,7 +333,7 @@ export function RulesPage() {
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <Switch checked={rule.is_active} onCheckedChange={() => handleToggle(rule)} data-testid={`switch-rule-active-${rule.id}`} />
                       <Button size="icon" variant="ghost" onClick={() => { setEditRule(rule); setDialogOpen(true); }} data-testid={`button-edit-rule-${rule.id}`}>
                         <Pencil className="w-4 h-4" />
@@ -330,7 +342,48 @@ export function RulesPage() {
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     </div>
+                    <ChevronRight className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", isOpen && "rotate-90")} />
                   </div>
+                  {isOpen && (
+                    <div className="px-4 pb-4 pt-3 border-t border-border/50 space-y-3">
+                      {strengths.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Strengths</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {strengths.map((s, i) => <span key={i} className="text-xs bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full">{s}</span>)}
+                          </div>
+                        </div>
+                      )}
+                      {weaknesses.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Weaknesses</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {weaknesses.map((w, i) => <span key={i} className="text-xs bg-red-500/15 text-red-400 px-2 py-0.5 rounded-full">{w}</span>)}
+                          </div>
+                        </div>
+                      )}
+                      {recommendations.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Recommendations</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {recommendations.map((r, i) => <span key={i} className="text-xs bg-blue-500/15 text-blue-400 px-2 py-0.5 rounded-full">{r}</span>)}
+                          </div>
+                        </div>
+                      )}
+                      {keywords.length > 5 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">All Keywords</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {keywords.map((kw, i) => <span key={i} className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{kw}</span>)}
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1.5">Condition</p>
+                        <pre className="text-xs bg-muted rounded p-2 overflow-x-auto text-muted-foreground">{JSON.stringify(rule.condition_json, null, 2)}</pre>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

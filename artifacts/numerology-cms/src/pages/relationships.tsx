@@ -19,7 +19,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const REL_TYPES = ["marriage", "business", "friendship", "family", "romantic"];
 
@@ -87,6 +88,7 @@ export function RelationshipsPage() {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [dialogItem, setDialogItem] = useState<RelationshipMapping | null | "new">(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
   const params: Record<string, unknown> = {};
@@ -123,23 +125,42 @@ export function RelationshipsPage() {
         <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
       ) : (
         <div className="space-y-2">
-          {data.map((m) => (
-            <Card key={m.id} className="group border-border hover:border-primary/30 transition-colors">
-              <CardContent className="p-4 flex items-start gap-4">
-                <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">{m.number}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <Badge variant="outline" className="text-xs capitalize">{m.relationship_type}</Badge>
+          {data.map((m) => {
+            const isOpen = expandedId === m.id;
+            return (
+              <Card key={m.id} className={cn("border-border transition-colors", isOpen && "border-primary/30")}>
+                <CardContent className="p-0">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setExpandedId(isOpen ? null : m.id)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isOpen ? null : m.id); } }}
+                    className="flex items-center gap-4 px-4 py-3 hover:bg-muted/30 cursor-pointer select-none transition-colors"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shrink-0">{m.number}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <Badge variant="outline" className="text-xs capitalize">{m.relationship_type}</Badge>
+                      </div>
+                      {m.interpretation && (
+                        <p className={cn("text-sm text-muted-foreground", !isOpen && "line-clamp-1")}>{m.interpretation}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(m)}><Pencil className="w-3 h-3" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(m.id)}><Trash2 className="w-3 h-3" /></Button>
+                    </div>
+                    <ChevronRight className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", isOpen && "rotate-90")} />
                   </div>
-                  {m.interpretation && <p className="text-sm text-muted-foreground">{m.interpretation}</p>}
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setDialogItem(m)}><Pencil className="w-3 h-3" /></Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(m.id)}><Trash2 className="w-3 h-3" /></Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  {isOpen && m.interpretation && (
+                    <div className="px-4 pb-4 pt-3 border-t border-border/50">
+                      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{m.interpretation}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
           {data.length === 0 && <div className="text-center py-16 text-muted-foreground text-sm">No mappings found.</div>}
         </div>
       )}

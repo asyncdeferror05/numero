@@ -137,7 +137,7 @@ function TestPanel({ formula }: { formula: Formula }) {
         extra_input: inputs.extra_input || undefined,
       },
     });
-    setResult(res);
+    setResult({ result: res.result ?? null, error: res.error });
   };
 
   return (
