@@ -12,4 +12,6 @@ export interface FormulaTestInput {
   year?: number;
   name?: string;
   extra_input?: string;
+  /** Shift the 'as of' date by N years to preview a future/past cycle (e.g. -1, 0, 1). Defaults to 0. */
+  year_offset?: number;
 }

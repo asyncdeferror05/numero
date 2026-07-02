@@ -12,4 +12,5 @@ export interface FormulaTestResult {
   error?: string;
   expression: string;
   formula_name: string;
+  cycle_year?: number;
 }

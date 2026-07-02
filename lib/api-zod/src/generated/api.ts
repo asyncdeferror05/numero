@@ -323,14 +323,16 @@ export const TestFormulaBody = zod.object({
   "month": zod.number().optional(),
   "year": zod.number().optional(),
   "name": zod.string().optional(),
-  "extra_input": zod.string().optional()
+  "extra_input": zod.string().optional(),
+  "year_offset": zod.number().optional().describe('Shift the \'as of\' date by N years to preview a future\/past cycle (e.g. -1, 0, 1). Defaults to 0.')
 })
 
 export const TestFormulaResponse = zod.object({
   "result": zod.number().nullish(),
   "error": zod.string().optional(),
   "expression": zod.string(),
-  "formula_name": zod.string()
+  "formula_name": zod.string(),
+  "cycle_year": zod.number().optional()
 })
 
 
@@ -1135,7 +1137,8 @@ export const DeleteRuleCategoryParams = zod.object({
  */
 export const GenerateReportBody = zod.object({
   "name": zod.string(),
-  "date_of_birth": zod.string().describe('ISO date string: YYYY-MM-DD')
+  "date_of_birth": zod.string().describe('ISO date string: YYYY-MM-DD'),
+  "year_offset": zod.number().optional().describe('Shift the \'as of\' date by N years to preview a future\/past personal year, month & day cycle (e.g. -1, 0, 1). Defaults to 0.')
 })
 
 export const GenerateReportResponse = zod.object({
@@ -1149,7 +1152,8 @@ export const GenerateReportResponse = zod.object({
   "personality_number": zod.number().nullish(),
   "personal_year": zod.number(),
   "personal_month": zod.number(),
-  "personal_day": zod.number()
+  "personal_day": zod.number(),
+  "cycle_year": zod.number().describe('The birthday-anchored cycle year used to compute personal_year (resets on the birthday, not Jan 1)')
 }),
   "personality_analysis": zod.object({
   "title": zod.string(),
@@ -1388,7 +1392,8 @@ export const GenerateReportResponse = zod.object({
   "recommendations": zod.array(zod.string()),
   "description": zod.string().nullish()
 })),
-  "generated_at": zod.string()
+  "generated_at": zod.string(),
+  "year_offset": zod.number().describe('The year offset applied when computing this report\'s personal year\/month\/day (0 = current cycle)')
 })
 
 

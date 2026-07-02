@@ -1429,6 +1429,9 @@ components:
         year: { type: integer }
         name: { type: string }
         extra_input: { type: string }
+        year_offset:
+          type: integer
+          description: "Shift the 'as of' date by N years to preview a future/past cycle (e.g. -1, 0, 1). Defaults to 0."
 
     FormulaTestResult:
       type: object
@@ -1437,6 +1440,7 @@ components:
         error: { type: string }
         expression: { type: string }
         formula_name: { type: string }
+        cycle_year: { type: integer }
       required: [expression, formula_name]
 
     FormulaDslReferenceItem:
@@ -1906,6 +1910,9 @@ components:
         date_of_birth:
           type: string
           description: "ISO date string: YYYY-MM-DD"
+        year_offset:
+          type: integer
+          description: "Shift the 'as of' date by N years to preview a future/past personal year, month & day cycle (e.g. -1, 0, 1). Defaults to 0."
       required: [name, date_of_birth]
 
     NumerologyReport:
@@ -1944,7 +1951,8 @@ components:
           items:
             $ref: "#/components/schemas/RuleInterpretation"
         generated_at: { type: string }
-      required: [subject, numbers, personality_analysis, career_analysis, relationship_analysis, health_analysis, money_analysis, travel_analysis, remedies, future_predictions, lo_shu, interpretations, generated_at]
+        year_offset: { type: integer, description: "The year offset applied when computing this report's personal year/month/day (0 = current cycle)" }
+      required: [subject, numbers, personality_analysis, career_analysis, relationship_analysis, health_analysis, money_analysis, travel_analysis, remedies, future_predictions, lo_shu, interpretations, generated_at, year_offset]
 
     ReportSection:
       type: object
@@ -2035,7 +2043,8 @@ components:
         personal_year: { type: integer }
         personal_month: { type: integer }
         personal_day: { type: integer }
-      required: [birthday_number, destiny_number, personal_year, personal_month, personal_day]
+        cycle_year: { type: integer, description: "The birthday-anchored cycle year used to compute personal_year (resets on the birthday, not Jan 1)" }
+      required: [birthday_number, destiny_number, personal_year, personal_month, personal_day, cycle_year]
 
     RuleInterpretation:
       type: object

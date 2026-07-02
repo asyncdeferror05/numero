@@ -7,9 +7,13 @@
  *
  * Available context variables:
  *   day, month, year          — DOB parts
- *   currentYear, currentMonth, currentDay — today
+ *   currentYear, currentMonth, currentDay — today (or the offset "as of" date)
  *   name                      — full name string
  *   extraInput                — vehicle/phone/house number string
+ *   cycleYear                 — birthday-anchored cycle year (resets on the birthday, not Jan 1)
+ *   monthsSinceLastBirthday   — number of calendar months since the last birthday occurred
+ *   birthdayWeekday           — numerology day-number of the weekday the birthday fell on this cycle
+ *   todayWeekday              — numerology day-number of the current date's weekday
  *
  * Available functions:
  *   reduce(n)                 — reduce to single digit, keep master numbers 11 22 33
@@ -21,6 +25,7 @@
  *   chaldean(str)             — Chaldean name number
  *   lettersOnly(str)          — strips non-alpha chars
  *   digitsOnly(str)           — strips non-digit chars
+ *   weekdayValue(dayIndex)    — numerology day-number for a JS weekday index (0=Sun..6=Sat)
  */
 
 export interface FormulaContext {
@@ -32,6 +37,10 @@ export interface FormulaContext {
   currentMonth: number;
   currentDay: number;
   extraInput: string;
+  cycleYear: number;
+  monthsSinceLastBirthday: number;
+  birthdayWeekday: number;
+  todayWeekday: number;
   [key: string]: unknown;
 }
 
@@ -59,6 +68,9 @@ const CHALDEAN: Record<string, number> = {
 };
 
 const VOWELS = new Set(["a", "e", "i", "o", "u"]);
+
+// Numerology day-numbers, indexed by JS Date#getDay() (0=Sunday .. 6=Saturday).
+const WEEKDAY_NUMBERS = [1, 2, 9, 5, 3, 6, 8];
 
 function reduceToSingleDigit(n: number): number {
   n = Math.abs(Math.round(n));
@@ -107,10 +119,21 @@ function digitsOnly(str: string): number {
   return Number(str.replace(/\D/g, "") || "0");
 }
 
+/** Numerology day-number for a JS weekday index (0=Sunday..6=Saturday). */
+function weekdayValue(dayIndex: number): number {
+  const idx = ((Math.round(dayIndex) % 7) + 7) % 7;
+  return WEEKDAY_NUMBERS[idx];
+}
+
+/** Numerology day-number for a given Date's weekday. */
+function weekdayNumberOf(date: Date): number {
+  return WEEKDAY_NUMBERS[date.getDay()];
+}
+
 const SAFE_FN_NAMES = [
   "reduce", "reduceAll", "sumDigits", "pythagorean",
   "pythagoreanVowels", "pythagoreanConsonants", "chaldean",
-  "lettersOnly", "digitsOnly",
+  "lettersOnly", "digitsOnly", "weekdayValue",
 ];
 
 /**
@@ -129,6 +152,7 @@ export function evaluateFormula(expression: string, ctx: FormulaContext): { resu
       chaldean,
       lettersOnly,
       digitsOnly,
+      weekdayValue,
     };
 
     const allVars = { ...ctx, ...helpers };
@@ -159,6 +183,9 @@ export function evaluateFormula(expression: string, ctx: FormulaContext): { resu
 /**
  * Build the default context for a given DOB and name.
  * Extra pre-computed values (like personalYear) can be merged in.
+ *
+ * `today` may be shifted by the caller (e.g. +/-1 year) to preview a
+ * different personal year/month/day cycle without changing the DOB.
  */
 export function buildContext(
   dob: Date,
@@ -167,15 +194,36 @@ export function buildContext(
   today = new Date(),
   extra: Record<string, unknown> = {},
 ): FormulaContext {
+  const day = dob.getDate();
+  const month = dob.getMonth() + 1;
+  const year = dob.getFullYear();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+
+  // The personal-year clock resets on the birthday, not Jan 1. If this
+  // year's birthday hasn't happened yet (as of `today`), the active cycle
+  // year is still last year's.
+  const birthdayPassed = currentMonth > month || (currentMonth === month && currentDay >= day);
+  const cycleYear = birthdayPassed ? currentYear : currentYear - 1;
+  const lastBirthday = new Date(cycleYear, month - 1, day);
+  const monthsSinceLastBirthday = (currentYear * 12 + currentMonth) - (cycleYear * 12 + month);
+  const birthdayWeekday = weekdayNumberOf(lastBirthday);
+  const todayWeekday = weekdayNumberOf(today);
+
   return {
-    day: dob.getDate(),
-    month: dob.getMonth() + 1,
-    year: dob.getFullYear(),
+    day,
+    month,
+    year,
     name,
-    currentYear: today.getFullYear(),
-    currentMonth: today.getMonth() + 1,
-    currentDay: today.getDate(),
+    currentYear,
+    currentMonth,
+    currentDay,
     extraInput,
+    cycleYear,
+    monthsSinceLastBirthday,
+    birthdayWeekday,
+    todayWeekday,
     ...extra,
   };
 }
@@ -190,14 +238,18 @@ export const DSL_REFERENCE = {
     { name: "month", description: "Month of birth (1–12)" },
     { name: "year", description: "Full birth year (e.g. 1990)" },
     { name: "name", description: "Full name string" },
-    { name: "currentYear", description: "Current year" },
+    { name: "currentYear", description: "Current year (or the offset 'as of' year)" },
     { name: "currentMonth", description: "Current month (1–12)" },
     { name: "currentDay", description: "Current day (1–31)" },
     { name: "extraInput", description: "Extra input — vehicle/phone/house number" },
+    { name: "cycleYear", description: "Birthday-anchored cycle year — equals currentYear if this year's birthday already happened, otherwise currentYear - 1" },
+    { name: "monthsSinceLastBirthday", description: "Number of calendar months elapsed since the last birthday occurred" },
+    { name: "birthdayWeekday", description: "Numerology day-number (Sun=1, Mon=2, Tue=9, Wed=5, Thu=3, Fri=6, Sat=8) of the weekday the last birthday fell on" },
+    { name: "todayWeekday", description: "Numerology day-number of the current date's weekday" },
   ],
   functions: [
     { name: "reduce(n)", description: "Reduce number to single digit, preserving master numbers 11, 22, 33" },
-    { name: "reduceAll(n)", description: "Force reduce to single digit, ignoring master numbers" },
+    { name: "reduceAll(n)", description: "Force reduce to single digit (0-9), ignoring master numbers" },
     { name: "sumDigits(n)", description: "Sum all digits of a number (e.g. sumDigits(1990) = 19)" },
     { name: "pythagorean(str)", description: "Pythagorean letter-to-number sum (A=1..Z=8, cycle 1-9)" },
     { name: "pythagoreanVowels(str)", description: "Sum of vowel values only — Soul Urge number" },
@@ -205,6 +257,7 @@ export const DSL_REFERENCE = {
     { name: "chaldean(str)", description: "Chaldean system letter sum" },
     { name: "lettersOnly(str)", description: "Remove all non-letter characters" },
     { name: "digitsOnly(str)", description: "Extract digits only, returns number" },
+    { name: "weekdayValue(dayIndex)", description: "Numerology day-number for a JS weekday index (0=Sun..6=Sat): Sun=1, Mon=2, Tue=9, Wed=5, Thu=3, Fri=6, Sat=8" },
   ],
   examples: [
     { label: "Birthday Number", expression: "reduce(day)" },
@@ -213,9 +266,9 @@ export const DSL_REFERENCE = {
     { label: "Soul Urge / Heart's Desire (Vowels)", expression: "reduce(pythagoreanVowels(name))" },
     { label: "Name Number (Pythagorean)", expression: "reduce(pythagorean(name))" },
     { label: "Name Number (Chaldean)", expression: "reduce(chaldean(name))" },
-    { label: "Personal Year", expression: "reduce(sumDigits(day) + sumDigits(month) + sumDigits(currentYear))" },
-    { label: "Personal Month", expression: "reduce(reduce(sumDigits(day) + sumDigits(month) + sumDigits(currentYear)) + currentMonth)" },
-    { label: "Personal Day", expression: "reduce(reduce(reduce(sumDigits(day) + sumDigits(month) + sumDigits(currentYear)) + currentMonth) + currentDay)" },
+    { label: "Personal Year", expression: "reduceAll(sumDigits(day) + sumDigits(month) + sumDigits(cycleYear) + birthdayWeekday)" },
+    { label: "Personal Month", expression: "reduceAll(sumDigits(day) + sumDigits(month) + sumDigits(year) + sumDigits(currentYear) + monthsSinceLastBirthday)" },
+    { label: "Personal Day", expression: "reduceAll(sumDigits(day) + sumDigits(month) + sumDigits(year) + sumDigits(currentDay) + sumDigits(currentMonth) + sumDigits(cycleYear) + todayWeekday)" },
     { label: "Vehicle / Phone / House Number", expression: "reduce(sumDigits(extraInput))" },
   ],
 };

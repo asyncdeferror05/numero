@@ -14,4 +14,6 @@ export interface CalculatedNumbers {
   personal_year: number;
   personal_month: number;
   personal_day: number;
+  /** The birthday-anchored cycle year used to compute personal_year (resets on the birthday, not Jan 1) */
+  cycle_year: number;
 }

@@ -109,6 +109,8 @@ export interface FormulaTestInput {
   year?: number;
   name?: string;
   extra_input?: string;
+  /** Shift the 'as of' date by N years to preview a future/past cycle (e.g. -1, 0, 1). Defaults to 0. */
+  year_offset?: number;
 }
 
 export interface FormulaTestResult {
@@ -117,6 +119,7 @@ export interface FormulaTestResult {
   error?: string;
   expression: string;
   formula_name: string;
+  cycle_year?: number;
 }
 
 export interface FormulaDslReferenceItem {
@@ -434,6 +437,8 @@ export interface ReportRequest {
   name: string;
   /** ISO date string: YYYY-MM-DD */
   date_of_birth: string;
+  /** Shift the 'as of' date by N years to preview a future/past personal year, month & day cycle (e.g. -1, 0, 1). Defaults to 0. */
+  year_offset?: number;
 }
 
 export type NumerologyReportSubject = {
@@ -449,6 +454,8 @@ export interface CalculatedNumbers {
   personal_year: number;
   personal_month: number;
   personal_day: number;
+  /** The birthday-anchored cycle year used to compute personal_year (resets on the birthday, not Jan 1) */
+  cycle_year: number;
 }
 
 export interface ReportSection {
@@ -534,6 +541,8 @@ export interface NumerologyReport {
   lo_shu: LoShuResult;
   interpretations: RuleInterpretation[];
   generated_at: string;
+  /** The year offset applied when computing this report's personal year/month/day (0 = current cycle) */
+  year_offset: number;
 }
 
 export type ListRulesParams = {

@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import {
   Loader2, User, Briefcase, Heart, Activity, DollarSign,
-  Plane, Sparkles, TrendingUp, Grid3X3, Brain, ChevronDown, ChevronRight,
+  Plane, Sparkles, TrendingUp, Grid3X3, Brain, ChevronDown, ChevronRight, ChevronLeft, RotateCcw,
 } from "lucide-react";
 
 // ─── Lo Shu Grid ────────────────────────────────────────────────────────────
@@ -172,6 +172,7 @@ export function ReportsPage() {
   const { toast } = useToast();
   const generateReport = useGenerateReport();
   const [report, setReport] = useState<NumerologyReport | null>(null);
+  const [lastValues, setLastValues] = useState<ReportFormValues | null>(null);
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
@@ -180,10 +181,22 @@ export function ReportsPage() {
 
   const onSubmit = async (data: ReportFormValues) => {
     try {
-      const result = await generateReport.mutateAsync({ data });
+      const result = await generateReport.mutateAsync({ data: { ...data, year_offset: 0 } });
       setReport(result);
+      setLastValues(data);
     } catch {
       toast({ title: "Error generating report", description: "Check your inputs and try again.", variant: "destructive" });
+    }
+  };
+
+  const shiftYear = async (delta: number) => {
+    if (!lastValues || !report) return;
+    const newOffset = report.year_offset + delta;
+    try {
+      const result = await generateReport.mutateAsync({ data: { ...lastValues, year_offset: newOffset } });
+      setReport(result);
+    } catch {
+      toast({ title: "Error shifting cycle", description: "Could not recalculate for that year.", variant: "destructive" });
     }
   };
 
@@ -239,7 +252,39 @@ export function ReportsPage() {
 
           {/* Core Numbers */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Core Numbers</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+              <CardTitle className="text-base">Core Numbers</CardTitle>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button" variant="outline" size="icon" className="h-7 w-7"
+                  onClick={() => shiftYear(-1)} disabled={generateReport.isPending}
+                  title="Previous year's cycle"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Button>
+                <span className="text-xs text-muted-foreground min-w-[104px] text-center">
+                  {report.year_offset === 0
+                    ? `Cycle ${report.numbers.cycle_year}`
+                    : `Cycle ${report.numbers.cycle_year} (${report.year_offset > 0 ? "+" : ""}${report.year_offset}y)`}
+                </span>
+                <Button
+                  type="button" variant="outline" size="icon" className="h-7 w-7"
+                  onClick={() => shiftYear(1)} disabled={generateReport.isPending}
+                  title="Next year's cycle"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+                {report.year_offset !== 0 && (
+                  <Button
+                    type="button" variant="ghost" size="icon" className="h-7 w-7"
+                    onClick={() => shiftYear(-report.year_offset)} disabled={generateReport.isPending}
+                    title="Reset to current cycle"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {[
@@ -255,6 +300,9 @@ export function ReportsPage() {
                   </div>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Use the arrows above to preview next/previous year's Personal Year, Month & Day cycle for this person.
+              </p>
             </CardContent>
           </Card>
 

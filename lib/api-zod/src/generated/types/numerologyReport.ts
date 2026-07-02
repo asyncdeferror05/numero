@@ -30,4 +30,6 @@ export interface NumerologyReport {
   lo_shu: LoShuResult;
   interpretations: RuleInterpretation[];
   generated_at: string;
+  /** The year offset applied when computing this report's personal year/month/day (0 = current cycle) */
+  year_offset: number;
 }

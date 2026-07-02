@@ -122,11 +122,13 @@ function TestPanel({ formula }: { formula: Formula }) {
   const testMutation = useTestFormula();
   const [open, setOpen] = useState(false);
   const [inputs, setInputs] = useState({ day: "15", month: "7", year: "1990", name: "", extra_input: "" });
-  const [result, setResult] = useState<{ result: number | null; error?: string } | null>(null);
+  const [yearOffset, setYearOffset] = useState(0);
+  const [result, setResult] = useState<{ result: number | null; error?: string; cycle_year?: number } | null>(null);
   const needsName = formula.formula_expression.includes("name") || formula.formula_expression.includes("pythagorean") || formula.formula_expression.includes("chaldean");
   const needsExtra = formula.formula_expression.includes("extraInput") || formula.formula_expression.includes("digitsOnly");
+  const usesCycle = /cycleYear|monthsSinceLastBirthday|birthdayWeekday|todayWeekday/.test(formula.formula_expression);
 
-  const runTest = async () => {
+  const runTest = async (offset = yearOffset) => {
     const res = await testMutation.mutateAsync({
       id: formula.id,
       data: {
@@ -135,9 +137,10 @@ function TestPanel({ formula }: { formula: Formula }) {
         year: Number(inputs.year),
         name: inputs.name || undefined,
         extra_input: inputs.extra_input || undefined,
+        year_offset: offset,
       },
     });
-    setResult({ result: res.result ?? null, error: res.error });
+    setResult({ result: res.result ?? null, error: res.error, cycle_year: res.cycle_year });
   };
 
   return (
@@ -177,8 +180,20 @@ function TestPanel({ formula }: { formula: Formula }) {
               <Input value={inputs.extra_input} onChange={(e) => setInputs((p) => ({ ...p, extra_input: e.target.value }))} className="h-7 text-xs" placeholder="DL-1234" />
             </div>
           )}
+          {usesCycle && (
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground shrink-0">Cycle year offset</label>
+              <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => { const v = yearOffset - 1; setYearOffset(v); runTest(v); }} disabled={testMutation.isPending}>
+                <ChevronLeftIcon className="w-3 h-3" />
+              </Button>
+              <span className="text-xs w-16 text-center">{yearOffset === 0 ? "current" : yearOffset > 0 ? `+${yearOffset}y` : `${yearOffset}y`}</span>
+              <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => { const v = yearOffset + 1; setYearOffset(v); runTest(v); }} disabled={testMutation.isPending}>
+                <ChevronRightIcon className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
           <div className="flex items-center gap-3">
-            <Button type="button" size="sm" onClick={runTest} disabled={testMutation.isPending} className="h-7 text-xs">
+            <Button type="button" size="sm" onClick={() => runTest()} disabled={testMutation.isPending} className="h-7 text-xs">
               {testMutation.isPending ? "Running…" : "Run"}
             </Button>
             {result && (
@@ -189,6 +204,9 @@ function TestPanel({ formula }: { formula: Formula }) {
                   <>
                     <span className="text-xs text-muted-foreground">Result:</span>
                     <span className="text-2xl font-bold text-primary">{result.result}</span>
+                    {result.cycle_year !== undefined && (
+                      <span className="text-xs text-muted-foreground">(cycle {result.cycle_year})</span>
+                    )}
                   </>
                 )}
               </div>

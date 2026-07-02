@@ -20,6 +20,16 @@ function reduceToSingleDigit(n: number): number {
   return n;
 }
 
+// Full reduction with no master-number preservation — used for personal
+// year/month/day, which are always expressed as a single digit 0-9.
+function reduceFull(n: number): number {
+  n = Math.abs(Math.round(n));
+  while (n > 9) {
+    n = String(n).split("").reduce((s, d) => s + Number(d), 0);
+  }
+  return n;
+}
+
 function sumDigits(n: number): number {
   return String(n).split("").reduce((s, d) => s + Number(d), 0);
 }
@@ -87,11 +97,15 @@ router.post("/reports/generate", async (req, res) => {
   const parsed = GenerateReportBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Invalid body" }); return; }
 
-  const { name, date_of_birth } = parsed.data;
+  const { name, date_of_birth, year_offset } = parsed.data;
   const dob = new Date(date_of_birth);
   if (isNaN(dob.getTime())) { res.status(400).json({ error: "Invalid date_of_birth" }); return; }
 
-  const today = new Date();
+  const yearOffset = year_offset ?? 0;
+  const rawToday = new Date();
+  // Shift "today" by whole years to preview a future/past personal year,
+  // month & day cycle (transpose) without changing the DOB.
+  const today = new Date(rawToday.getFullYear() + yearOffset, rawToday.getMonth(), rawToday.getDate());
   const day = dob.getDate();
   const month = dob.getMonth() + 1;
   const year = dob.getFullYear();
@@ -147,19 +161,26 @@ router.post("/reports/generate", async (req, res) => {
     0, // no fallback — requires name
   );
 
+  // Personal Year: DOB day + DOB month + birthday-anchored cycle year + the
+  // numerology day-number of the weekday the birthday fell on this cycle —
+  // fully reduced to a single digit 0-9.
   const personalYear = evalFormula(
     "personal_year",
-    reduceToSingleDigit(sumDigits(day) + sumDigits(month) + sumDigits(currentYear)),
+    reduceFull(sumDigits(day) + sumDigits(month) + sumDigits(baseCtx.cycleYear) + baseCtx.birthdayWeekday),
   );
 
+  // Personal Month: DOB day + DOB month + DOB year + current year + number
+  // of months elapsed since the last birthday.
   const personalMonth = evalFormula(
     "personal_month",
-    reduceToSingleDigit(personalYear + currentMonth),
+    reduceFull(sumDigits(day) + sumDigits(month) + sumDigits(year) + sumDigits(currentYear) + baseCtx.monthsSinceLastBirthday),
   );
 
+  // Personal Day: DOB day + DOB month + DOB year + current date + current
+  // month + cycle year + the numerology day-number of today's weekday.
   const personalDay = evalFormula(
     "personal_day",
-    reduceToSingleDigit(personalMonth + currentDay),
+    reduceFull(sumDigits(day) + sumDigits(month) + sumDigits(year) + sumDigits(currentDay) + sumDigits(currentMonth) + sumDigits(baseCtx.cycleYear) + baseCtx.todayWeekday),
   );
 
   const numberMap: Record<string, number> = {
@@ -274,6 +295,7 @@ router.post("/reports/generate", async (req, res) => {
 
   res.json({
     subject: { name, date_of_birth },
+    year_offset: yearOffset,
     numbers: {
       birthday_number: birthdayNumber,
       destiny_number: destinyNumber,
@@ -281,6 +303,7 @@ router.post("/reports/generate", async (req, res) => {
       personal_year: personalYear,
       personal_month: personalMonth,
       personal_day: personalDay,
+      cycle_year: baseCtx.cycleYear,
     },
     formulas_used: Object.fromEntries(
       activeFormulas.map((f) => [f.formula_type, { name: f.name, version: f.version, expression: f.formula_expression }]),

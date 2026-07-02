@@ -153,8 +153,10 @@ router.post("/formulas/:id/test", async (req, res) => {
   const year = typeof body.year === "number" ? body.year : 1990;
   const name = typeof body.name === "string" ? body.name : "";
   const extra_input = typeof body.extra_input === "string" ? body.extra_input : "";
+  const yearOffset = typeof body.year_offset === "number" ? body.year_offset : 0;
 
-  const today = new Date();
+  const rawToday = new Date();
+  const today = new Date(rawToday.getFullYear() + yearOffset, rawToday.getMonth(), rawToday.getDate());
   const dob = new Date(year, month - 1, day);
   const ctx = buildContext(dob, name, extra_input, today);
   const { result, error } = evaluateFormula(formula.formula_expression, ctx);
@@ -164,6 +166,7 @@ router.post("/formulas/:id/test", async (req, res) => {
     error,
     expression: formula.formula_expression,
     formula_name: formula.name,
+    cycle_year: ctx.cycleYear,
   });
 });
 
