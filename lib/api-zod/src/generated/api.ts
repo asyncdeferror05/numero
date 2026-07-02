@@ -581,7 +581,10 @@ export const ListArrowRulesResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "numbers": zod.array(zod.number()),
+  "arrow_type": zod.string(),
   "interpretation": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "weaknesses": zod.array(zod.string()),
   "is_active": zod.boolean(),
   "created_at": zod.string(),
   "updated_at": zod.string()
@@ -595,7 +598,10 @@ export const ListArrowRulesResponse = zod.array(ListArrowRulesResponseItem)
 export const CreateArrowRuleBody = zod.object({
   "name": zod.string(),
   "numbers": zod.array(zod.number()),
+  "arrow_type": zod.string().optional(),
   "interpretation": zod.string(),
+  "strengths": zod.array(zod.string()).optional(),
+  "weaknesses": zod.array(zod.string()).optional(),
   "is_active": zod.boolean().optional()
 })
 
@@ -610,7 +616,10 @@ export const UpdateArrowRuleParams = zod.object({
 export const UpdateArrowRuleBody = zod.object({
   "name": zod.string().optional(),
   "numbers": zod.array(zod.number()).optional(),
+  "arrow_type": zod.string().optional(),
   "interpretation": zod.string().optional(),
+  "strengths": zod.array(zod.string()).optional(),
+  "weaknesses": zod.array(zod.string()).optional(),
   "is_active": zod.boolean().optional()
 })
 
@@ -618,7 +627,10 @@ export const UpdateArrowRuleResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "numbers": zod.array(zod.number()),
+  "arrow_type": zod.string(),
   "interpretation": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "weaknesses": zod.array(zod.string()),
   "is_active": zod.boolean(),
   "created_at": zod.string(),
   "updated_at": zod.string()
@@ -1322,11 +1334,13 @@ export const GenerateReportResponse = zod.object({
 }))
 }),
   "lo_shu": zod.object({
+  "digit_pool": zod.array(zod.number()),
   "grid": zod.array(zod.array(zod.number())),
   "missing_numbers": zod.array(zod.number()),
   "repeated_numbers": zod.array(zod.object({
   "number": zod.number(),
-  "count": zod.number()
+  "count": zod.number(),
+  "label": zod.string()
 })),
   "active_arrows": zod.array(zod.string()),
   "missing_interpretations": zod.array(zod.object({
@@ -1355,7 +1369,10 @@ export const GenerateReportResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "numbers": zod.array(zod.number()),
+  "arrow_type": zod.string(),
   "interpretation": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "weaknesses": zod.array(zod.string()),
   "is_active": zod.boolean(),
   "created_at": zod.string(),
   "updated_at": zod.string()

@@ -10,7 +10,10 @@ export interface ArrowRule {
   id: number;
   name: string;
   numbers: number[];
+  arrow_type: string;
   interpretation: string;
+  strengths: string[];
+  weaknesses: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;

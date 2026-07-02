@@ -9,4 +9,5 @@
 export interface RepeatedEntry {
   number: number;
   count: number;
+  label: string;
 }

@@ -226,7 +226,10 @@ export interface ArrowRule {
   id: number;
   name: string;
   numbers: number[];
+  arrow_type: string;
   interpretation: string;
+  strengths: string[];
+  weaknesses: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -235,14 +238,20 @@ export interface ArrowRule {
 export interface ArrowRuleInput {
   name: string;
   numbers: number[];
+  arrow_type?: string;
   interpretation: string;
+  strengths?: string[];
+  weaknesses?: string[];
   is_active?: boolean;
 }
 
 export interface ArrowRuleUpdate {
   name?: string;
   numbers?: number[];
+  arrow_type?: string;
   interpretation?: string;
+  strengths?: string[];
+  weaknesses?: string[];
   is_active?: boolean;
 }
 
@@ -497,9 +506,11 @@ export interface FuturePredictions {
 export interface RepeatedEntry {
   number: number;
   count: number;
+  label: string;
 }
 
 export interface LoShuResult {
+  digit_pool: number[];
   grid: number[][];
   missing_numbers: number[];
   repeated_numbers: RepeatedEntry[];

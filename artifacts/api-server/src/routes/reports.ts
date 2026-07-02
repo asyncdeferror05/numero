@@ -24,43 +24,59 @@ function sumDigits(n: number): number {
   return String(n).split("").reduce((s, d) => s + Number(d), 0);
 }
 
-function buildLoShuGrid(dob: Date) {
+const REPEAT_LABELS: Record<number, string> = { 2: "Double", 3: "Triple", 4: "Quadruple", 5: "Quintuple" };
+
+function buildLoShuGrid(dob: Date, destinyNumber: number, birthdayNumber: number) {
   const dobStr = [
     String(dob.getFullYear()),
     String(dob.getMonth() + 1).padStart(2, "0"),
     String(dob.getDate()).padStart(2, "0"),
   ].join("");
 
-  const digitCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
+  // Build digit pool: DOB digits + destiny number + birthday number
+  const digitPool: number[] = [];
   for (const ch of dobStr) {
-    const d = Number(ch);
+    digitPool.push(Number(ch));
+  }
+  if (destinyNumber >= 1 && destinyNumber <= 9) digitPool.push(destinyNumber);
+  if (birthdayNumber >= 1 && birthdayNumber <= 9) digitPool.push(birthdayNumber);
+
+  const digitCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
+  for (const d of digitPool) {
     if (d >= 1 && d <= 9) digitCounts[d]++;
   }
 
+  // Standard Lo Shu grid layout: 4|9|2 / 3|5|7 / 8|1|6
   const grid = [
     [digitCounts[4], digitCounts[9], digitCounts[2]],
     [digitCounts[3], digitCounts[5], digitCounts[7]],
     [digitCounts[8], digitCounts[1], digitCounts[6]],
   ];
 
-  const missingNumbers = Object.entries(digitCounts).filter(([, v]) => v === 0).map(([k]) => Number(k));
-  const repeatedNumbers = Object.entries(digitCounts).filter(([, v]) => v > 1).map(([k, v]) => ({ number: Number(k), count: v }));
+  const missingNumbers = Object.entries(digitCounts)
+    .filter(([, v]) => v === 0)
+    .map(([k]) => Number(k))
+    .sort((a, b) => a - b);
 
-  return { grid, digitCounts, missingNumbers, repeatedNumbers };
+  const repeatedNumbers = Object.entries(digitCounts)
+    .filter(([, v]) => v > 1)
+    .map(([k, v]) => ({
+      number: Number(k),
+      count: v,
+      label: REPEAT_LABELS[v] ?? `×${v}`,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return { digitPool, grid, digitCounts, missingNumbers, repeatedNumbers };
 }
 
-function getActiveArrows(digitCounts: Record<number, number>) {
-  const ARROWS = [
-    { name: "Arrow of Determination", numbers: [1, 5, 9] },
-    { name: "Arrow of Intellect", numbers: [3, 5, 7] },
-    { name: "Arrow of Practicality", numbers: [1, 2, 3] },
-    { name: "Arrow of Will Power", numbers: [7, 8, 9] },
-    { name: "Arrow of Emotional Balance", numbers: [4, 5, 6] },
-    { name: "Arrow of Activity", numbers: [2, 5, 8] },
-    { name: "Arrow of Planner", numbers: [4, 3, 8] },
-    { name: "Arrow of the Enquirer", numbers: [2, 7, 6] },
-  ];
-  return ARROWS.filter((a) => a.numbers.every((n) => (digitCounts[n] ?? 0) > 0)).map((a) => a.name);
+function getActiveArrows(
+  digitCounts: Record<number, number>,
+  dbArrows: Array<{ name: string; numbers: number[] }>,
+) {
+  return dbArrows
+    .filter((a) => a.numbers.every((n) => (digitCounts[n] ?? 0) > 0))
+    .map((a) => a.name);
 }
 
 const fmt = <T extends { created_at: Date; updated_at: Date }>(r: T) => ({
@@ -178,8 +194,8 @@ router.post("/reports/generate", async (req, res) => {
     });
 
   // ─── Lo Shu ────────────────────────────────────────────────────────────────
-  const { grid, digitCounts, missingNumbers, repeatedNumbers } = buildLoShuGrid(dob);
-  const activeArrows = getActiveArrows(digitCounts);
+  const { digitPool, grid, digitCounts, missingNumbers, repeatedNumbers } = buildLoShuGrid(dob, destinyNumber, birthdayNumber);
+  const activeArrows = getActiveArrows(digitCounts, arrowRulesDb);
   const missingInterps = missingRulesDb.filter((r) => missingNumbers.includes(r.missing_number)).map(fmt);
   const repeatedInterps = repeatedRulesDb.filter((r) => repeatedNumbers.some((rn) => rn.number === r.number && rn.count >= r.count)).map(fmt);
   const arrowInterps = arrowRulesDb.filter((r) => activeArrows.includes(r.name)).map(fmt);
@@ -278,6 +294,7 @@ router.post("/reports/generate", async (req, res) => {
     remedies: relevantRemedies,
     future_predictions,
     lo_shu: {
+      digit_pool: digitPool,
       grid,
       missing_numbers: missingNumbers,
       repeated_numbers: repeatedNumbers,

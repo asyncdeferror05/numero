@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,9 +31,38 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TagInput } from "@/components/tag-input";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 
-// ─── Missing Number ──────────────────────────────────────────────────────────
+// ─── Expandable Card ─────────────────────────────────────────────────────────
+
+function ExpandableCard({ children, header }: { children: React.ReactNode; header: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Card className="border-border transition-colors">
+      <CardContent className="py-0 px-0">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setOpen((o) => !o)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setOpen((o) => !o); }}
+          className="w-full flex items-center justify-between gap-4 px-5 py-3 text-left hover:bg-muted/30 transition-colors rounded-lg cursor-pointer select-none"
+        >
+          {header}
+          <span className="text-muted-foreground shrink-0">
+            {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </span>
+        </div>
+        {open && (
+          <div className="px-5 pb-4 pt-1 border-t border-border/50">
+            {children}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Missing Number ───────────────────────────────────────────────────────────
 
 const missingSchema = z.object({
   missing_number: z.coerce.number().int().min(1).max(9),
@@ -97,19 +127,19 @@ function MissingDialog({ open, rule, onClose }: { open: boolean; rule: MissingNu
               <FormField control={form.control} name="title" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Title</FormLabel>
-                  <FormControl><Input {...field} placeholder="Missing 1" data-testid="input-missing-title" /></FormControl>
+                  <FormControl><Input {...field} placeholder="Missing 1 — No Drive" data-testid="input-missing-title" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
             <FormField control={form.control} name="strengths" render={({ field }) => (
-              <FormItem><FormLabel>Strengths</FormLabel><FormControl><TagInput value={field.value} onChange={field.onChange} placeholder="Add strengths..." /></FormControl></FormItem>
+              <FormItem><FormLabel>Strengths</FormLabel><FormControl><TagInput value={field.value} onChange={field.onChange} placeholder="Add strength..." /></FormControl></FormItem>
             )} />
             <FormField control={form.control} name="weaknesses" render={({ field }) => (
-              <FormItem><FormLabel>Weaknesses</FormLabel><FormControl><TagInput value={field.value} onChange={field.onChange} placeholder="Add weaknesses..." /></FormControl></FormItem>
+              <FormItem><FormLabel>Weaknesses</FormLabel><FormControl><TagInput value={field.value} onChange={field.onChange} placeholder="Add weakness..." /></FormControl></FormItem>
             )} />
             <FormField control={form.control} name="recommendations" render={({ field }) => (
-              <FormItem><FormLabel>Recommendations</FormLabel><FormControl><TagInput value={field.value} onChange={field.onChange} placeholder="Add recommendations..." /></FormControl></FormItem>
+              <FormItem><FormLabel>Recommendations</FormLabel><FormControl><TagInput value={field.value} onChange={field.onChange} placeholder="Add recommendation..." /></FormControl></FormItem>
             )} />
             <FormField control={form.control} name="is_active" render={({ field }) => (
               <FormItem className="flex items-center gap-2">
@@ -173,6 +203,8 @@ function RepeatedDialog({ open, rule, onClose }: { open: boolean; rule: Repeated
     }
   };
 
+  const COUNT_LABELS: Record<number, string> = { 2: "Double (×2)", 3: "Triple (×3)", 4: "Quadruple (×4)", 5: "Quintuple (×5)" };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -191,9 +223,13 @@ function RepeatedDialog({ open, rule, onClose }: { open: boolean; rule: Repeated
               )} />
               <FormField control={form.control} name="count" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Min Count</FormLabel>
-                  <FormControl><Input {...field} type="number" min={2} data-testid="input-repeated-count" /></FormControl>
-                  <FormMessage />
+                  <FormLabel>Occurrence</FormLabel>
+                  <Select onValueChange={(v) => field.onChange(Number(v))} defaultValue={String(field.value)}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {[2, 3, 4, 5].map(n => <SelectItem key={n} value={String(n)}>{COUNT_LABELS[n]}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </FormItem>
               )} />
               <FormField control={form.control} name="title" render={({ field }) => (
@@ -232,7 +268,10 @@ function RepeatedDialog({ open, rule, onClose }: { open: boolean; rule: Repeated
 const arrowSchema = z.object({
   name: z.string().min(1),
   numbers: z.array(z.number()).min(1, "At least one number required"),
+  arrow_type: z.enum(["strength", "weakness"]).default("strength"),
   interpretation: z.string().min(1),
+  strengths: z.array(z.string()).default([]),
+  weaknesses: z.array(z.string()).default([]),
   is_active: z.boolean().optional(),
 });
 type ArrowFormValues = z.infer<typeof arrowSchema>;
@@ -249,7 +288,10 @@ function ArrowDialog({ open, rule, onClose }: { open: boolean; rule: ArrowRule |
     defaultValues: {
       name: rule?.name ?? "",
       numbers: rule?.numbers ?? [],
+      arrow_type: (rule?.arrow_type as "strength" | "weakness") ?? "strength",
       interpretation: rule?.interpretation ?? "",
+      strengths: rule?.strengths ?? [],
+      weaknesses: rule?.weaknesses ?? [],
       is_active: rule?.is_active ?? true,
     },
   });
@@ -278,20 +320,35 @@ function ArrowDialog({ open, rule, onClose }: { open: boolean; rule: ArrowRule |
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{rule ? "Edit Arrow Rule" : "New Arrow Rule"}</DialogTitle></DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField control={form.control} name="name" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Arrow Name</FormLabel>
-                <FormControl><Input {...field} placeholder="Arrow of Determination" data-testid="input-arrow-name" /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Arrow Name</FormLabel>
+                  <FormControl><Input {...field} placeholder="Arrow of Determination" data-testid="input-arrow-name" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="arrow_type" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="strength">Strength Arrow</SelectItem>
+                      <SelectItem value="weakness">Weakness Arrow</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
             <FormField control={form.control} name="numbers" render={() => (
               <FormItem>
-                <FormLabel>Numbers in Arrow</FormLabel>
+                <FormLabel>Numbers in Arrow (e.g. 1-5-9)</FormLabel>
                 <div className="flex gap-2 flex-wrap">
                   {[1,2,3,4,5,6,7,8,9].map(n => (
                     <button
@@ -305,6 +362,9 @@ function ArrowDialog({ open, rule, onClose }: { open: boolean; rule: ArrowRule |
                     </button>
                   ))}
                 </div>
+                {selectedNums.length > 0 && (
+                  <p className="text-xs text-muted-foreground">Selected: {selectedNums.join("-")}</p>
+                )}
                 <FormMessage />
               </FormItem>
             )} />
@@ -312,10 +372,16 @@ function ArrowDialog({ open, rule, onClose }: { open: boolean; rule: ArrowRule |
               <FormItem>
                 <FormLabel>Interpretation</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Strong determination and focus..." data-testid="input-arrow-interpretation" />
+                  <Textarea {...field} placeholder="Describe what this arrow means..." rows={3} data-testid="input-arrow-interpretation" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
+            )} />
+            <FormField control={form.control} name="strengths" render={({ field }) => (
+              <FormItem><FormLabel>Strengths</FormLabel><FormControl><TagInput value={field.value} onChange={field.onChange} placeholder="determination..." /></FormControl></FormItem>
+            )} />
+            <FormField control={form.control} name="weaknesses" render={({ field }) => (
+              <FormItem><FormLabel>Weaknesses</FormLabel><FormControl><TagInput value={field.value} onChange={field.onChange} placeholder="stubbornness..." /></FormControl></FormItem>
             )} />
             <FormField control={form.control} name="is_active" render={({ field }) => (
               <FormItem className="flex items-center gap-2">
@@ -364,7 +430,7 @@ export function LoShuPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold font-serif">Lo Shu CMS</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage Lo Shu grid interpretation rules</p>
+        <p className="text-muted-foreground text-sm mt-1">Manage Lo Shu grid interpretation rules — click any card to expand its content</p>
       </div>
 
       <Tabs defaultValue="missing">
@@ -374,7 +440,8 @@ export function LoShuPage() {
           <TabsTrigger value="arrows" data-testid="tab-arrows">Arrows</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="missing" className="space-y-4 mt-4">
+        {/* ── Missing Numbers ── */}
+        <TabsContent value="missing" className="space-y-3 mt-4">
           <div className="flex justify-end">
             <Button onClick={() => { setEditMissing(null); setMissingDialog(true); }} data-testid="button-new-missing">
               <Plus className="w-4 h-4 mr-2" />New Rule
@@ -383,25 +450,27 @@ export function LoShuPage() {
           {loadingMissing ? (
             <div className="space-y-2">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
           ) : (missingRules?.length ?? 0) === 0 ? (
-            <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No missing number rules yet.</CardContent></Card>
+            <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No missing number rules yet. Click "New Rule" to add one.</CardContent></Card>
           ) : (
             <div className="space-y-2">
               {missingRules!.map((rule) => (
-                <Card key={rule.id} data-testid={`missing-rule-card-${rule.id}`}>
-                  <CardContent className="py-3 px-5">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/15 text-primary font-bold text-sm flex items-center justify-center">{rule.missing_number}</div>
-                        <div>
-                          <span className="font-medium text-sm text-foreground">{rule.title}</span>
-                          <div className="flex gap-1 mt-0.5">
-                            {rule.weaknesses.slice(0, 3).map((w, i) => (
-                              <span key={i} className="text-xs text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">{w}</span>
-                            ))}
-                          </div>
+                <ExpandableCard
+                  key={rule.id}
+                  header={
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-destructive/15 text-destructive font-bold text-sm flex items-center justify-center shrink-0">
+                        {rule.missing_number}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-foreground">{rule.title}</p>
+                        <div className="flex gap-1 mt-0.5 flex-wrap">
+                          {rule.weaknesses.slice(0, 3).map((w, i) => (
+                            <span key={i} className="text-xs text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">{w}</span>
+                          ))}
+                          {!rule.is_active && <Badge variant="secondary" className="text-xs">Inactive</Badge>}
                         </div>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <Button size="icon" variant="ghost" onClick={() => { setEditMissing(rule); setMissingDialog(true); }} data-testid={`button-edit-missing-${rule.id}`}>
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -410,14 +479,39 @@ export function LoShuPage() {
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  }
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2 text-sm">
+                    {rule.strengths.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-emerald-400 mb-1.5 uppercase tracking-wide">Strengths</p>
+                        <ul className="space-y-1">{rule.strengths.map((s, i) => <li key={i} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-emerald-400 mt-0.5">•</span>{s}</li>)}</ul>
+                      </div>
+                    )}
+                    {rule.weaknesses.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-destructive mb-1.5 uppercase tracking-wide">Weaknesses</p>
+                        <ul className="space-y-1">{rule.weaknesses.map((w, i) => <li key={i} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-destructive mt-0.5">•</span>{w}</li>)}</ul>
+                      </div>
+                    )}
+                    {rule.recommendations.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-amber-400 mb-1.5 uppercase tracking-wide">Recommendations</p>
+                        <ul className="space-y-1">{rule.recommendations.map((r, i) => <li key={i} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-amber-400 mt-0.5">•</span>{r}</li>)}</ul>
+                      </div>
+                    )}
+                    {rule.strengths.length === 0 && rule.weaknesses.length === 0 && rule.recommendations.length === 0 && (
+                      <p className="text-xs text-muted-foreground col-span-3">No interpretation content yet. Click edit to add details.</p>
+                    )}
+                  </div>
+                </ExpandableCard>
               ))}
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="repeated" className="space-y-4 mt-4">
+        {/* ── Repeated Numbers ── */}
+        <TabsContent value="repeated" className="space-y-3 mt-4">
           <div className="flex justify-end">
             <Button onClick={() => { setEditRepeated(null); setRepeatedDialog(true); }} data-testid="button-new-repeated">
               <Plus className="w-4 h-4 mr-2" />New Rule
@@ -429,39 +523,65 @@ export function LoShuPage() {
             <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No repeated number rules yet.</CardContent></Card>
           ) : (
             <div className="space-y-2">
-              {repeatedRules!.map((rule) => (
-                <Card key={rule.id} data-testid={`repeated-rule-card-${rule.id}`}>
-                  <CardContent className="py-3 px-5">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-accent/15 text-accent font-bold text-sm flex items-center justify-center">{rule.number}</div>
-                        <div>
-                          <span className="font-medium text-sm text-foreground">{rule.title}</span>
-                          <span className="text-xs text-muted-foreground ml-2">×{rule.count}+</span>
-                          <div className="flex gap-1 mt-0.5">
+              {repeatedRules!.map((rule) => {
+                const countLabel = { 2: "Double", 3: "Triple", 4: "Quadruple", 5: "Quintuple" }[rule.count] ?? `×${rule.count}`;
+                return (
+                  <ExpandableCard
+                    key={rule.id}
+                    header={
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-amber-500/15 text-amber-400 font-bold text-sm flex items-center justify-center shrink-0">
+                          {rule.number}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm text-foreground">{rule.title}</p>
+                            <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/30">{countLabel}</Badge>
+                            {!rule.is_active && <Badge variant="secondary" className="text-xs">Inactive</Badge>}
+                          </div>
+                          <div className="flex gap-1 mt-0.5 flex-wrap">
                             {rule.strengths.slice(0, 3).map((s, i) => (
-                              <span key={i} className="text-xs text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded">{s}</span>
+                              <span key={i} className="text-xs text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">{s}</span>
                             ))}
                           </div>
                         </div>
+                        <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <Button size="icon" variant="ghost" onClick={() => { setEditRepeated(rule); setRepeatedDialog(true); }} data-testid={`button-edit-repeated-${rule.id}`}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" onClick={() => setDeleteRepeatedTarget(rule)} data-testid={`button-delete-repeated-${rule.id}`}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => { setEditRepeated(rule); setRepeatedDialog(true); }} data-testid={`button-edit-repeated-${rule.id}`}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={() => setDeleteRepeatedTarget(rule)} data-testid={`button-delete-repeated-${rule.id}`}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
+                    }
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 text-sm">
+                      {rule.strengths.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-emerald-400 mb-1.5 uppercase tracking-wide">Strengths</p>
+                          <ul className="space-y-1">{rule.strengths.map((s, i) => <li key={i} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-emerald-400 mt-0.5">•</span>{s}</li>)}</ul>
+                        </div>
+                      )}
+                      {rule.weaknesses.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-destructive mb-1.5 uppercase tracking-wide">Weaknesses</p>
+                          <ul className="space-y-1">{rule.weaknesses.map((w, i) => <li key={i} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-destructive mt-0.5">•</span>{w}</li>)}</ul>
+                        </div>
+                      )}
+                      {rule.strengths.length === 0 && rule.weaknesses.length === 0 && (
+                        <p className="text-xs text-muted-foreground col-span-2">No interpretation content yet. Click edit to add details.</p>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  </ExpandableCard>
+                );
+              })}
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="arrows" className="space-y-4 mt-4">
+        {/* ── Arrow Rules ── */}
+        <TabsContent value="arrows" className="space-y-3 mt-4">
           <div className="flex justify-end">
             <Button onClick={() => { setEditArrow(null); setArrowDialog(true); }} data-testid="button-new-arrow">
               <Plus className="w-4 h-4 mr-2" />New Arrow
@@ -470,25 +590,33 @@ export function LoShuPage() {
           {loadingArrows ? (
             <div className="space-y-2">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
           ) : (arrowRules?.length ?? 0) === 0 ? (
-            <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No arrow rules yet.</CardContent></Card>
+            <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No arrow rules yet. Click "New Arrow" to define one.</CardContent></Card>
           ) : (
             <div className="space-y-2">
               {arrowRules!.map((rule) => (
-                <Card key={rule.id} data-testid={`arrow-rule-card-${rule.id}`}>
-                  <CardContent className="py-3 px-5">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm text-foreground">{rule.name}</span>
+                <ExpandableCard
+                  key={rule.id}
+                  header={
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className={`px-2 py-1 rounded text-xs font-bold shrink-0 ${rule.arrow_type === "strength" ? "bg-emerald-500/15 text-emerald-400" : "bg-destructive/15 text-destructive"}`}>
+                        {rule.arrow_type === "strength" ? "↑" : "↓"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-sm text-foreground">{rule.name}</p>
                           <div className="flex gap-1">
                             {rule.numbers.map((n) => (
-                              <span key={n} className="w-6 h-6 rounded bg-primary/15 text-primary text-xs font-bold flex items-center justify-center">{n}</span>
+                              <span key={n} className="w-5 h-5 rounded bg-primary/15 text-primary text-xs font-bold flex items-center justify-center">{n}</span>
                             ))}
                           </div>
+                          <Badge variant="outline" className={`text-xs ${rule.arrow_type === "strength" ? "border-emerald-500/30 text-emerald-400" : "border-destructive/30 text-destructive"}`}>
+                            {rule.arrow_type}
+                          </Badge>
+                          {!rule.is_active && <Badge variant="secondary" className="text-xs">Inactive</Badge>}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{rule.interpretation}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{rule.interpretation}</p>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <Button size="icon" variant="ghost" onClick={() => { setEditArrow(rule); setArrowDialog(true); }} data-testid={`button-edit-arrow-${rule.id}`}>
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -497,43 +625,107 @@ export function LoShuPage() {
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  }
+                >
+                  <div className="space-y-3 mt-2">
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">Interpretation</p>
+                      <p className="text-sm text-foreground">{rule.interpretation}</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {rule.strengths.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-emerald-400 mb-1.5 uppercase tracking-wide">Strengths</p>
+                          <ul className="space-y-1">{rule.strengths.map((s, i) => <li key={i} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-emerald-400 mt-0.5">•</span>{s}</li>)}</ul>
+                        </div>
+                      )}
+                      {rule.weaknesses.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-destructive mb-1.5 uppercase tracking-wide">Weaknesses</p>
+                          <ul className="space-y-1">{rule.weaknesses.map((w, i) => <li key={i} className="text-xs text-muted-foreground flex gap-1.5"><span className="text-destructive mt-0.5">•</span>{w}</li>)}</ul>
+                        </div>
+                      )}
+                    </div>
+                    {rule.numbers.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wide">Activates when all present</p>
+                        <div className="flex gap-1.5">
+                          {rule.numbers.map((n, i) => (
+                            <span key={n}>
+                              <span className="w-7 h-7 inline-flex items-center justify-center rounded bg-primary/15 text-primary text-sm font-bold">{n}</span>
+                              {i < rule.numbers.length - 1 && <span className="text-muted-foreground mx-0.5">—</span>}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ExpandableCard>
               ))}
             </div>
           )}
         </TabsContent>
       </Tabs>
 
-      <MissingDialog open={missingDialog} rule={editMissing} onClose={() => setMissingDialog(false)} />
-      <RepeatedDialog open={repeatedDialog} rule={editRepeated} onClose={() => setRepeatedDialog(false)} />
-      <ArrowDialog open={arrowDialog} rule={editArrow} onClose={() => setArrowDialog(false)} />
+      {/* Dialogs */}
+      <MissingDialog open={missingDialog} rule={editMissing} onClose={() => { setMissingDialog(false); setEditMissing(null); }} />
+      <RepeatedDialog open={repeatedDialog} rule={editRepeated} onClose={() => { setRepeatedDialog(false); setEditRepeated(null); }} />
+      <ArrowDialog open={arrowDialog} rule={editArrow} onClose={() => { setArrowDialog(false); setEditArrow(null); }} />
 
       {/* Delete confirms */}
       <AlertDialog open={!!deleteMissingTarget} onOpenChange={() => setDeleteMissingTarget(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Delete Rule</AlertDialogTitle><AlertDialogDescription>Delete "{deleteMissingTarget?.title}"?</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Missing {deleteMissingTarget?.missing_number} rule?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={async () => { await deleteMissing.mutateAsync({ id: deleteMissingTarget!.id }); qc.invalidateQueries({ queryKey: getListMissingNumberRulesQueryKey() }); toast({ title: "Deleted" }); setDeleteMissingTarget(null); }}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={async () => {
+              if (!deleteMissingTarget) return;
+              await deleteMissing.mutateAsync({ id: deleteMissingTarget.id });
+              qc.invalidateQueries({ queryKey: getListMissingNumberRulesQueryKey() });
+              toast({ title: "Rule deleted" });
+              setDeleteMissingTarget(null);
+            }}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       <AlertDialog open={!!deleteRepeatedTarget} onOpenChange={() => setDeleteRepeatedTarget(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Delete Rule</AlertDialogTitle><AlertDialogDescription>Delete "{deleteRepeatedTarget?.title}"?</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete repeated number rule?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={async () => { await deleteRepeated.mutateAsync({ id: deleteRepeatedTarget!.id }); qc.invalidateQueries({ queryKey: getListRepeatedNumberRulesQueryKey() }); toast({ title: "Deleted" }); setDeleteRepeatedTarget(null); }}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={async () => {
+              if (!deleteRepeatedTarget) return;
+              await deleteRepeated.mutateAsync({ id: deleteRepeatedTarget.id });
+              qc.invalidateQueries({ queryKey: getListRepeatedNumberRulesQueryKey() });
+              toast({ title: "Rule deleted" });
+              setDeleteRepeatedTarget(null);
+            }}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       <AlertDialog open={!!deleteArrowTarget} onOpenChange={() => setDeleteArrowTarget(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Delete Arrow</AlertDialogTitle><AlertDialogDescription>Delete "{deleteArrowTarget?.name}"?</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{deleteArrowTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={async () => { await deleteArrow.mutateAsync({ id: deleteArrowTarget!.id }); qc.invalidateQueries({ queryKey: getListArrowRulesQueryKey() }); toast({ title: "Deleted" }); setDeleteArrowTarget(null); }}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={async () => {
+              if (!deleteArrowTarget) return;
+              await deleteArrow.mutateAsync({ id: deleteArrowTarget.id });
+              qc.invalidateQueries({ queryKey: getListArrowRulesQueryKey() });
+              toast({ title: "Arrow deleted" });
+              setDeleteArrowTarget(null);
+            }}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1613,11 +1613,18 @@ components:
         numbers:
           type: array
           items: { type: integer }
+        arrow_type: { type: string }
         interpretation: { type: string }
+        strengths:
+          type: array
+          items: { type: string }
+        weaknesses:
+          type: array
+          items: { type: string }
         is_active: { type: boolean }
         created_at: { type: string }
         updated_at: { type: string }
-      required: [id, name, numbers, interpretation, is_active, created_at, updated_at]
+      required: [id, name, numbers, arrow_type, interpretation, strengths, weaknesses, is_active, created_at, updated_at]
 
     ArrowRuleInput:
       type: object
@@ -1626,7 +1633,14 @@ components:
         numbers:
           type: array
           items: { type: integer }
+        arrow_type: { type: string }
         interpretation: { type: string }
+        strengths:
+          type: array
+          items: { type: string }
+        weaknesses:
+          type: array
+          items: { type: string }
         is_active: { type: boolean }
       required: [name, numbers, interpretation]
 
@@ -1637,7 +1651,14 @@ components:
         numbers:
           type: array
           items: { type: integer }
+        arrow_type: { type: string }
         interpretation: { type: string }
+        strengths:
+          type: array
+          items: { type: string }
+        weaknesses:
+          type: array
+          items: { type: string }
         is_active: { type: boolean }
 
     NumberMeaning:
@@ -2040,6 +2061,9 @@ components:
     LoShuResult:
       type: object
       properties:
+        digit_pool:
+          type: array
+          items: { type: integer }
         grid:
           type: array
           items:
@@ -2067,11 +2091,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ArrowRule"
-      required: [grid, missing_numbers, repeated_numbers, active_arrows, missing_interpretations, repeated_interpretations, arrow_interpretations]
+      required: [digit_pool, grid, missing_numbers, repeated_numbers, active_arrows, missing_interpretations, repeated_interpretations, arrow_interpretations]
 
     RepeatedEntry:
       type: object
       properties:
         number: { type: integer }
         count: { type: integer }
-      required: [number, count]
+        label: { type: string }
+      required: [number, count, label]

@@ -11,6 +11,7 @@ import type { RepeatedEntry } from './repeatedEntry';
 import type { RepeatedNumberRule } from './repeatedNumberRule';
 
 export interface LoShuResult {
+  digit_pool: number[];
   grid: number[][];
   missing_numbers: number[];
   repeated_numbers: RepeatedEntry[];
