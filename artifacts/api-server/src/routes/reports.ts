@@ -36,20 +36,19 @@ function sumDigits(n: number): number {
 
 const REPEAT_LABELS: Record<number, string> = { 2: "Double", 3: "Triple", 4: "Quadruple", 5: "Quintuple" };
 
-function buildLoShuGrid(dob: Date, destinyNumber: number, birthdayNumber: number) {
+function buildLoShuGrid(dob: Date, destinyNumber: number) {
   const dobStr = [
     String(dob.getFullYear()),
     String(dob.getMonth() + 1).padStart(2, "0"),
     String(dob.getDate()).padStart(2, "0"),
   ].join("");
 
-  // Build digit pool: DOB digits + destiny number + birthday number
+  // Build digit pool: DOB digits + destiny number
   const digitPool: number[] = [];
   for (const ch of dobStr) {
     digitPool.push(Number(ch));
   }
   if (destinyNumber >= 1 && destinyNumber <= 9) digitPool.push(destinyNumber);
-  if (birthdayNumber >= 1 && birthdayNumber <= 9) digitPool.push(birthdayNumber);
 
   const digitCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
   for (const d of digitPool) {
@@ -215,7 +214,7 @@ router.post("/reports/generate", async (req, res) => {
     });
 
   // ─── Lo Shu ────────────────────────────────────────────────────────────────
-  const { digitPool, grid, digitCounts, missingNumbers, repeatedNumbers } = buildLoShuGrid(dob, destinyNumber, birthdayNumber);
+  const { digitPool, grid, digitCounts, missingNumbers, repeatedNumbers } = buildLoShuGrid(dob, destinyNumber);
   const activeArrows = getActiveArrows(digitCounts, arrowRulesDb);
   const missingInterps = missingRulesDb.filter((r) => missingNumbers.includes(r.missing_number)).map(fmt);
   const repeatedInterps = repeatedRulesDb.filter((r) => repeatedNumbers.some((rn) => rn.number === r.number && rn.count >= r.count)).map(fmt);
