@@ -1382,6 +1382,11 @@ export const GenerateReportResponse = zod.object({
   "updated_at": zod.string()
 }))
 }),
+  "astro_numero": zod.object({
+  "digit_pool": zod.array(zod.number()).describe('Unique digits (1-9) present, deduplicated'),
+  "grid": zod.array(zod.array(zod.number())).describe('3x3 grid in fixed layout [[3,1,9],[6,7,5],[2,8,4]] — each cell is the number if present, 0 if absent'),
+  "missing_numbers": zod.array(zod.number())
+}).describe('Astro Numero grid — built only from the day, month, and the last two digits of the birth year (no full 4-digit year, no destiny\/other numbers). Duplicate digits are collapsed; each present number is mentioned only once.\n'),
   "interpretations": zod.array(zod.object({
   "rule_id": zod.number(),
   "rule_name": zod.string(),

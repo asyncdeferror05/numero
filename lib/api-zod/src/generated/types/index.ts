@@ -9,6 +9,7 @@
 export * from './arrowRule';
 export * from './arrowRuleInput';
 export * from './arrowRuleUpdate';
+export * from './astroNumeroResult';
 export * from './calculatedNumbers';
 export * from './careerSection';
 export * from './compatibilityRule';

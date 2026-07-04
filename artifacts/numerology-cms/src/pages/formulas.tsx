@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/collapsible";
 import {
   Plus, Pencil, Trash2, Copy, CheckCircle2, ChevronDown,
-  ChevronRight, Zap, FlaskConical, BookOpen, Star,
+  ChevronRight, ChevronLeft, Zap, FlaskConical, BookOpen, Star,
 } from "lucide-react";
 
 export const FORMULA_TYPES = [
@@ -47,6 +47,7 @@ export const FORMULA_TYPES = [
   { value: "house_number", label: "House Number" },
   { value: "name_number", label: "Name Number" },
   { value: "lo_shu", label: "Lo Shu" },
+  { value: "random_number", label: "Random Number (0-108)" },
   { value: "custom", label: "Custom" },
 ];
 
@@ -184,11 +185,11 @@ function TestPanel({ formula }: { formula: Formula }) {
             <div className="flex items-center gap-2">
               <label className="text-xs text-muted-foreground shrink-0">Cycle year offset</label>
               <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => { const v = yearOffset - 1; setYearOffset(v); runTest(v); }} disabled={testMutation.isPending}>
-                <ChevronLeftIcon className="w-3 h-3" />
+                <ChevronLeft className="w-3 h-3" />
               </Button>
               <span className="text-xs w-16 text-center">{yearOffset === 0 ? "current" : yearOffset > 0 ? `+${yearOffset}y` : `${yearOffset}y`}</span>
               <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => { const v = yearOffset + 1; setYearOffset(v); runTest(v); }} disabled={testMutation.isPending}>
-                <ChevronRightIcon className="w-3 h-3" />
+                <ChevronRight className="w-3 h-3" />
               </Button>
             </div>
           )}

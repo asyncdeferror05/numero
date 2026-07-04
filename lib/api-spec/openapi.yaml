@@ -1946,13 +1946,15 @@ components:
           $ref: "#/components/schemas/FuturePredictions"
         lo_shu:
           $ref: "#/components/schemas/LoShuResult"
+        astro_numero:
+          $ref: "#/components/schemas/AstroNumeroResult"
         interpretations:
           type: array
           items:
             $ref: "#/components/schemas/RuleInterpretation"
         generated_at: { type: string }
         year_offset: { type: integer, description: "The year offset applied when computing this report's personal year/month/day (0 = current cycle)" }
-      required: [subject, numbers, personality_analysis, career_analysis, relationship_analysis, health_analysis, money_analysis, travel_analysis, remedies, future_predictions, lo_shu, interpretations, generated_at, year_offset]
+      required: [subject, numbers, personality_analysis, career_analysis, relationship_analysis, health_analysis, money_analysis, travel_analysis, remedies, future_predictions, lo_shu, astro_numero, interpretations, generated_at, year_offset]
 
     ReportSection:
       type: object
@@ -2109,3 +2111,26 @@ components:
         count: { type: integer }
         label: { type: string }
       required: [number, count, label]
+
+    AstroNumeroResult:
+      type: object
+      description: >
+        Astro Numero grid — built only from the day, month, and the last two
+        digits of the birth year (no full 4-digit year, no destiny/other
+        numbers). Duplicate digits are collapsed; each present number is
+        mentioned only once.
+      properties:
+        digit_pool:
+          type: array
+          items: { type: integer }
+          description: Unique digits (1-9) present, deduplicated
+        grid:
+          type: array
+          items:
+            type: array
+            items: { type: integer }
+          description: "3x3 grid in fixed layout [[3,1,9],[6,7,5],[2,8,4]] — each cell is the number if present, 0 if absent"
+        missing_numbers:
+          type: array
+          items: { type: integer }
+      required: [digit_pool, grid, missing_numbers]

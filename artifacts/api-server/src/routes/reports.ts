@@ -79,6 +79,31 @@ function buildLoShuGrid(dob: Date, destinyNumber: number) {
   return { digitPool, grid, digitCounts, missingNumbers, repeatedNumbers };
 }
 
+// Astro Numero grid — built only from day, month, and the last two digits of
+// the birth year (never the full 4-digit year, never destiny/other numbers).
+// Duplicate digits collapse: a number that appears twice is still mentioned
+// only once.
+const ASTRO_NUMERO_LAYOUT = [
+  [3, 1, 9],
+  [6, 7, 5],
+  [2, 8, 4],
+];
+
+function buildAstroNumeroGrid(dob: Date) {
+  const dd = String(dob.getDate()).padStart(2, "0");
+  const mm = String(dob.getMonth() + 1).padStart(2, "0");
+  const yy = String(dob.getFullYear() % 100).padStart(2, "0");
+  const rawDigits = `${dd}${mm}${yy}`.split("").map(Number);
+
+  const digitPool = Array.from(new Set(rawDigits.filter((d) => d >= 1 && d <= 9))).sort((a, b) => a - b);
+  const present = new Set(digitPool);
+
+  const grid = ASTRO_NUMERO_LAYOUT.map((row) => row.map((n) => (present.has(n) ? n : 0)));
+  const missingNumbers = ASTRO_NUMERO_LAYOUT.flat().filter((n) => !present.has(n)).sort((a, b) => a - b);
+
+  return { digitPool, grid, missingNumbers };
+}
+
 function getActiveArrows(
   digitCounts: Record<number, number>,
   dbArrows: Array<{ name: string; numbers: number[] }>,
@@ -216,6 +241,7 @@ router.post("/reports/generate", async (req, res) => {
   // ─── Lo Shu ────────────────────────────────────────────────────────────────
   const { digitPool, grid, digitCounts, missingNumbers, repeatedNumbers } = buildLoShuGrid(dob, destinyNumber);
   const activeArrows = getActiveArrows(digitCounts, arrowRulesDb);
+  const astroNumero = buildAstroNumeroGrid(dob);
   const missingInterps = missingRulesDb.filter((r) => missingNumbers.includes(r.missing_number)).map(fmt);
   const repeatedInterps = repeatedRulesDb.filter((r) => repeatedNumbers.some((rn) => rn.number === r.number && rn.count >= r.count)).map(fmt);
   const arrowInterps = arrowRulesDb.filter((r) => activeArrows.includes(r.name)).map(fmt);
@@ -324,6 +350,11 @@ router.post("/reports/generate", async (req, res) => {
       missing_interpretations: missingInterps,
       repeated_interpretations: repeatedInterps,
       arrow_interpretations: arrowInterps,
+    },
+    astro_numero: {
+      digit_pool: astroNumero.digitPool,
+      grid: astroNumero.grid,
+      missing_numbers: astroNumero.missingNumbers,
     },
     interpretations,
     generated_at: new Date().toISOString(),

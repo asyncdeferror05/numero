@@ -74,6 +74,41 @@ function LoShuGrid({ result }: { result: NumerologyReport["lo_shu"] }) {
   );
 }
 
+// ─── Astro Numero Grid ────────────────────────────────────────────────────────
+
+const ASTRO_NUMERO_GRID_POSITIONS = [
+  [3, 1, 9],
+  [6, 7, 5],
+  [2, 8, 4],
+];
+
+function AstroNumeroGrid({ result }: { result: NumerologyReport["astro_numero"] }) {
+  const present = new Set(result.digit_pool ?? []);
+
+  return (
+    <div className="space-y-3">
+      <div className="inline-grid grid-cols-3 gap-1.5">
+        {ASTRO_NUMERO_GRID_POSITIONS.flat().map((n) => {
+          const isPresent = present.has(n);
+          return (
+            <div key={n} className={`w-18 h-18 min-w-[4.5rem] min-h-[4.5rem] flex flex-col items-center justify-center rounded-md border text-sm font-bold gap-0.5
+              ${!isPresent ? "border-destructive/40 bg-destructive/10 text-destructive/60" : "border-border bg-muted/40 text-foreground"}`}
+            >
+              <span className="text-xl leading-none">{n}</span>
+              {!isPresent && <span className="text-[10px] font-normal text-destructive/60">absent</span>}
+            </div>
+          );
+        })}
+      </div>
+      {result.digit_pool && result.digit_pool.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Digit pool (dd/mm/yy only, deduplicated): [{result.digit_pool.join(", ")}]
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── Collapsible interpretation block ────────────────────────────────────────
 
 function CollapsibleBlock({ title, badge, children, defaultOpen = false }: {
@@ -608,6 +643,48 @@ export function ReportsPage() {
                   No interpretations yet. Add rules in <span className="text-primary">Lo Shu CMS</span> to see analysis here.
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Astro Numero Grid — full section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Grid3X3 className="w-4 h-4 text-primary" />
+                <CardTitle className="text-base">Astro Numero Grid</CardTitle>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Grid built only from day, month, and the last two digits of the birth year — duplicate digits mentioned once
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <AstroNumeroGrid result={report.astro_numero} />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/60">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Present Numbers</p>
+                  {report.astro_numero.digit_pool.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {report.astro_numero.digit_pool.map((n) => (
+                        <span key={n} className="w-6 h-6 rounded bg-primary/15 text-primary text-xs font-bold flex items-center justify-center">{n}</span>
+                      ))}
+                    </div>
+                  ) : <p className="text-xs text-muted-foreground">—</p>}
+                </div>
+
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/60">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Missing Numbers</p>
+                  {report.astro_numero.missing_numbers.length === 0 ? (
+                    <p className="text-xs text-emerald-400">None — all numbers present</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {report.astro_numero.missing_numbers.map((n) => (
+                        <span key={n} className="w-6 h-6 rounded-full bg-destructive/20 text-destructive text-xs font-bold flex items-center justify-center">{n}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
 

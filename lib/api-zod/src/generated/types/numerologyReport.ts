@@ -5,6 +5,7 @@
  * Numerology CMS API
  * OpenAPI spec version: 0.1.0
  */
+import type { AstroNumeroResult } from './astroNumeroResult';
 import type { CalculatedNumbers } from './calculatedNumbers';
 import type { CareerSection } from './careerSection';
 import type { FuturePredictions } from './futurePredictions';
@@ -28,6 +29,7 @@ export interface NumerologyReport {
   remedies: Remedy[];
   future_predictions: FuturePredictions;
   lo_shu: LoShuResult;
+  astro_numero: AstroNumeroResult;
   interpretations: RuleInterpretation[];
   generated_at: string;
   /** The year offset applied when computing this report's personal year/month/day (0 = current cycle) */

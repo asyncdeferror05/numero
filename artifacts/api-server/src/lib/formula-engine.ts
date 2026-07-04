@@ -1,3 +1,5 @@
+import { randomInt as cryptoRandomInt } from "crypto";
+
 /**
  * Formula Engine — dynamic expression evaluator for numerology calculations.
  *
@@ -130,10 +132,21 @@ function weekdayNumberOf(date: Date): number {
   return WEEKDAY_NUMBERS[date.getDay()];
 }
 
+/**
+ * Cryptographically-secure, unbiased random integer in [min, max] inclusive.
+ * Uses Node's crypto.randomInt (rejection sampling under the hood), so every
+ * value in range has exactly equal probability — no modulo bias.
+ */
+function randomInt(min: number, max: number): number {
+  const lo = Math.ceil(Math.min(min, max));
+  const hi = Math.floor(Math.max(min, max));
+  return cryptoRandomInt(lo, hi + 1);
+}
+
 const SAFE_FN_NAMES = [
   "reduce", "reduceAll", "sumDigits", "pythagorean",
   "pythagoreanVowels", "pythagoreanConsonants", "chaldean",
-  "lettersOnly", "digitsOnly", "weekdayValue",
+  "lettersOnly", "digitsOnly", "weekdayValue", "randomInt",
 ];
 
 /**
@@ -153,6 +166,7 @@ export function evaluateFormula(expression: string, ctx: FormulaContext): { resu
       lettersOnly,
       digitsOnly,
       weekdayValue,
+      randomInt,
     };
 
     const allVars = { ...ctx, ...helpers };
@@ -258,6 +272,7 @@ export const DSL_REFERENCE = {
     { name: "lettersOnly(str)", description: "Remove all non-letter characters" },
     { name: "digitsOnly(str)", description: "Extract digits only, returns number" },
     { name: "weekdayValue(dayIndex)", description: "Numerology day-number for a JS weekday index (0=Sun..6=Sat): Sun=1, Mon=2, Tue=9, Wed=5, Thu=3, Fri=6, Sat=8" },
+    { name: "randomInt(min, max)", description: "Cryptographically-secure, unbiased random integer between min and max (inclusive)" },
   ],
   examples: [
     { label: "Birthday Number", expression: "reduce(day)" },
@@ -270,5 +285,6 @@ export const DSL_REFERENCE = {
     { label: "Personal Month", expression: "reduceAll(sumDigits(day) + sumDigits(month) + sumDigits(year) + sumDigits(currentYear) + monthsSinceLastBirthday)" },
     { label: "Personal Day", expression: "reduceAll(sumDigits(day) + sumDigits(month) + sumDigits(year) + sumDigits(currentDay) + sumDigits(currentMonth) + sumDigits(cycleYear) + todayWeekday)" },
     { label: "Vehicle / Phone / House Number", expression: "reduce(sumDigits(extraInput))" },
+    { label: "Random Number (0-108)", expression: "randomInt(0, 108)" },
   ],
 };

@@ -527,6 +527,18 @@ export interface LoShuResult {
   arrow_interpretations: ArrowRule[];
 }
 
+/**
+ * Astro Numero grid — built only from the day, month, and the last two digits of the birth year (no full 4-digit year, no destiny/other numbers). Duplicate digits are collapsed; each present number is mentioned only once.
+
+ */
+export interface AstroNumeroResult {
+  /** Unique digits (1-9) present, deduplicated */
+  digit_pool: number[];
+  /** 3x3 grid in fixed layout [[3,1,9],[6,7,5],[2,8,4]] — each cell is the number if present, 0 if absent */
+  grid: number[][];
+  missing_numbers: number[];
+}
+
 export interface NumerologyReport {
   subject: NumerologyReportSubject;
   numbers: CalculatedNumbers;
@@ -539,6 +551,7 @@ export interface NumerologyReport {
   remedies: Remedy[];
   future_predictions: FuturePredictions;
   lo_shu: LoShuResult;
+  astro_numero: AstroNumeroResult;
   interpretations: RuleInterpretation[];
   generated_at: string;
   /** The year offset applied when computing this report's personal year/month/day (0 = current cycle) */
